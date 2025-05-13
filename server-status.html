@@ -23,30 +23,25 @@
             margin-top: 20px;
         }
         .status-up {
-            color: #00FF00; /* Green for 'up' status */
+            color: #00FF00;
         }
         .status-down {
-            color: #FF0000; /* Red for 'down' status */
+            color: #FF0000;
         }
-        /* Big green dot */
-        .status-up::before {
-            content: " ";
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            background-color: #00FF00; /* Green dot */
-            border-radius: 50%;
-            margin-right: 10px; /* Space between the dot and text */
-        }
-        /* Big red dot */
+        .status-up::before,
         .status-down::before {
             content: " ";
             display: inline-block;
             width: 20px;
             height: 20px;
-            background-color: #FF0000; /* Red dot */
             border-radius: 50%;
-            margin-right: 10px; /* Space between the dot and text */
+            margin-right: 10px;
+        }
+        .status-up::before {
+            background-color: #00FF00;
+        }
+        .status-down::before {
+            background-color: #FF0000;
         }
         .button {
             background-color: #FF0000;
@@ -79,21 +74,29 @@
 
     <script src="https://mcapi.us/scripts/minecraft.min.js"></script>
     <script>
-        MinecraftAPI.getServerStatus('167.114.213.51', { // IP address of your server
-            port: 25568 // Port number
-        }, function (err, status) {
-            if (err) {
-                return document.querySelector('#server-status').innerHTML = 'Error loading status';
-            }
+        function checkServerStatus() {
+            MinecraftAPI.getServerStatus('167.114.213.51', {
+                port: 25568
+            }, function (err, status) {
+                const statusElement = document.querySelector('#server-status');
+                if (err) {
+                    statusElement.innerHTML = '<span class="status-down">Error loading status</span>';
+                    return;
+                }
 
-            // Display server status based on the response
-            const statusElement = document.querySelector('#server-status');
-            if (status.online) {
-                statusElement.innerHTML = 'Server is <span class="status-up">up</span>!';
-            } else {
-                statusElement.innerHTML = 'Server is <span class="status-down">down</span>';
-            }
-        });
+                if (status.online) {
+                    statusElement.innerHTML = 'Server is <span class="status-up">up</span>!';
+                } else {
+                    statusElement.innerHTML = 'Server is <span class="status-down">down</span>';
+                }
+            });
+        }
+
+        // First check when page loads
+        checkServerStatus();
+
+        // Check every 60 seconds (60000ms)
+        setInterval(checkServerStatus, 60000);
     </script>
 </body>
 </html>
