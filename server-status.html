@@ -28,6 +28,26 @@
         .status-down {
             color: #FF0000; /* Red for 'down' status */
         }
+        /* Big green dot */
+        .status-up::before {
+            content: " ";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: #00FF00; /* Green dot */
+            border-radius: 50%;
+            margin-right: 10px; /* Space between the dot and text */
+        }
+        /* Big red dot */
+        .status-down::before {
+            content: " ";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: #FF0000; /* Red dot */
+            border-radius: 50%;
+            margin-right: 10px; /* Space between the dot and text */
+        }
         .button {
             background-color: #FF0000;
             color: white;
