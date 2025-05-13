@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Status - Hamborgor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000; /* Black background */
+            color: #74B5E3; /* Light blue text */
+            text-align: center;
+            padding: 50px;
+        }
 
+        .status {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .status.online {
+            color: #00FF00; /* Green for online */
+        }
+
+        .status.offline {
+            color: #FF0000; /* Red for offline */
+        }
+
+        .status-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        .online-dot {
+            background-color: #00FF00; /* Green dot */
+        }
+
+        .offline-dot {
+            background-color: #FF0000; /* Red dot */
+        }
+
+        .button {
+            background-color: #FF0000; /* Red button */
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            background-color: #000000;
+            border: 2px solid #FF0000;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Hamborgor Server Status</h1>
+
+    <p id="server-status" class="status">Loading...</p> <!-- Status will be set via JavaScript -->
+
+    <!-- Button linking back to the homepage -->
+    <a href="index.html" class="button">Back to Homepage</a>
+
+    <!-- Include the MCAPI JavaScript library -->
+    <script src="https://mcapi.us/scripts/minecraft.min.js"></script>
+    
+    <script>
+        // Minecraft server info
+        const serverIP = '167.114.213.51'; // Replace with your server's IP address
+        const serverPort = 25568; // Replace with your server's port if needed
+
+        // Get the server status using MCAPI
+        MinecraftAPI.getServerStatus(serverIP, { port: serverPort }, function (err, status) {
+            const statusElement = document.getElementById("server-status");
+
+            if (err) {
+                statusElement.textContent = "Error loading status";
+                statusElement.classList.add("offline");
+                statusElement.classList.remove("online");
+                statusElement.innerHTML += '<span class="status-dot offline-dot"></span>';
+                return;
+            }
+
+            // Check if the server is online or offline
+            if (status.online) {
+                statusElement.textContent = "Server is up and running";
+                statusElement.classList.add("online");
+                statusElement.classList.remove("offline");
+                statusElement.innerHTML += '<span class="status-dot online-dot"></span>';
+            } else {
+                statusElement.textContent = "Server is closed for maintenance";
+                statusElement.classList.add("offline");
+                statusElement.classList.remove("online");
+                statusElement.innerHTML += '<span class="status-dot offline-dot"></span>';
+            }
+        });
+    </script>
+
+</body>
+</html>
