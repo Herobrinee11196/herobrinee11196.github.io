@@ -28,19 +28,19 @@
         .status-down {
             color: #FF0000;
         }
-        .status-up::before,
-        .status-down::before {
+        .status-up::after,
+        .status-down::after {
             content: " ";
             display: inline-block;
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-left: 10px;
         }
-        .status-up::before {
+        .status-up::after {
             background-color: #00FF00;
         }
-        .status-down::before {
+        .status-down::after {
             background-color: #FF0000;
         }
         .button {
