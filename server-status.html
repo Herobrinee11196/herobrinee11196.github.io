@@ -72,24 +72,23 @@
     <!-- Back button -->
     <a href="index.html" class="button">Back to Homepage</a>
 
-    <script src="https://mcapi.us/scripts/minecraft.min.js"></script>
     <script>
         function checkServerStatus() {
-            MinecraftAPI.getServerStatus('167.114.213.51', {
-                port: 25568
-            }, function (err, status) {
-                const statusElement = document.querySelector('#server-status');
-                if (err) {
+            fetch('https://api.mcsrvstat.us/2/167.114.213.51:25568')
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.querySelector('#server-status');
+                    if (data.online) {
+                        statusElement.innerHTML = 'Server is <span class="status-up">up!</span>';
+                    } else {
+                        statusElement.innerHTML = 'Server is <span class="status-down">down.</span>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const statusElement = document.querySelector('#server-status');
                     statusElement.innerHTML = '<span class="status-down">Error loading status</span>';
-                    return;
-                }
-
-                if (status.online) {
-                    statusElement.innerHTML = 'Server is <span class="status-up">up!</span>';
-                } else {
-                    statusElement.innerHTML = 'Server is <span class="status-down">down.</span>';
-                }
-            });
+                });
         }
 
         // First check when page loads
