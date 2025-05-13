@@ -1,2 +1,2 @@
 # herobrinee11196.github.io
-Hambor Server Website
+The Official Hambor Server Website
