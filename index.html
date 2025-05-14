@@ -11,9 +11,20 @@
             background-color: #000000; /* Black background */
             text-align: center;
             padding: 50px;
-            height: 100%;
-            cursor: url('custom-cursor.png') 0 0, auto; /* Custom cursor using favicon.png */
         }
+        html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: url('custom-cursor.png') 0 0, auto;
+}
+
+body::after {
+    content: "";
+    display: block;
+    height: 100vh;
+}
+
         h1 {
             color: #74B5E3; /* Light blue text for the heading */
         }
