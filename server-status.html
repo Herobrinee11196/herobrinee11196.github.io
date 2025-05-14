@@ -74,12 +74,12 @@
 
     <script>
         function checkServerStatus() {
-            fetch('https://cors-anywhere.herokuapp.com/https://api.mcsrvstat.us/2/167.114.213.51')
+            fetch('https://api.mcstatus.io/v2/status/java/167.114.213.51:25568')
                 .then(response => response.json())
                 .then(data => {
                     const statusElement = document.querySelector('#server-status');
                     if (data.online) {
-                        statusElement.innerHTML = 'Server is <span class="status-up">up!</span>';
+                        statusElement.innerHTML = `Server is <span class="status-up">up! Version: ${data.version.name_clean}</span>`;
                     } else {
                         statusElement.innerHTML = 'Server is <span class="status-down">down.</span>';
                     }
