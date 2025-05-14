@@ -74,7 +74,7 @@
 
     <script>
         function checkServerStatus() {
-            fetch('https://api.mcsrvstat.us/2/167.114.213.51:25568')
+            fetch('https://cors-anywhere.herokuapp.com/https://api.mcsrvstat.us/2/167.114.213.51')
                 .then(response => response.json())
                 .then(data => {
                     const statusElement = document.querySelector('#server-status');
