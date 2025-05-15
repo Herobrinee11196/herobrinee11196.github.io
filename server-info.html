@@ -71,5 +71,26 @@ body::after {
 <p><span class="value">Geyser & Floodgate (for Bedrock compatibility)</span></p>
 
     <a href="index.html" class="button">Back to Homepage</a>
+    <!-- Copy IP Button -->
+    <a href="#" class="button" id="copyIP">Copy Server IP (For Java)</a>
+
+<script>
+  const copyButton = document.getElementById("copyIP");
+
+  copyButton.addEventListener("click", (event) => {
+    event.preventDefault(); // prevent page jump
+    const ip = "167.114.213.51:25568";
+    navigator.clipboard.writeText(ip).then(() => {
+      copyButton.textContent = "Copied!";
+      setTimeout(() => {
+        copyButton.textContent = "Copy Server IP";
+      }, 2000);
+    }).catch(err => {
+      console.error("Copy failed", err);
+      copyButton.textContent = "Error!";
+    });
+  });
+</script>
+    
 </body>
 </html>
