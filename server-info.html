@@ -83,7 +83,7 @@ body::after {
     navigator.clipboard.writeText(ip).then(() => {
       copyButton.textContent = "Copied!";
       setTimeout(() => {
-        copyButton.textContent = "Copy Server IP";
+        copyButton.textContent = "Copy Server IP (For Java)";
       }, 2000);
     }).catch(err => {
       console.error("Copy failed", err);
