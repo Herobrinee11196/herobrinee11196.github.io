@@ -72,64 +72,30 @@ body::after {
 
     <a href="index.html" class="button">Back to Homepage</a>
     <!-- Copy IP Button -->
-    <a href="#" class="button" id="copyIP1">Copy Server IP & Port (Java Format)</a>
+<a href="#" class="button" id="copyIP1">Copy Server IP & Port (Java Format)</a>
+<a href="#" class="button" id="copyIP2">Copy Server IP (Bedrock Format)</a>
+<a href="#" class="button" id="copyport">Copy Server Port (Bedrock Format)</a>
 
 <script>
-  const copyButton = document.getElementById("copyIP1");
-
-  copyButton.addEventListener("click", (event) => {
-    event.preventDefault(); // prevent page jump
-    const ip = "167.114.213.51:25568";
-    navigator.clipboard.writeText(ip).then(() => {
-      copyButton.textContent = "Copied!";
-      setTimeout(() => {
-        copyButton.textContent = "Copy Server IP & Port (Java Format)";
-      }, 2000);
-    }).catch(err => {
-      console.error("Copy failed", err);
-      copyButton.textContent = "Error!";
+  function setupCopyButton(id, text, originalText) {
+    const btn = document.getElementById(id);
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "Copied!";
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      }).catch(err => {
+        console.error("Copy failed", err);
+        btn.textContent = "Error!";
+      });
     });
-  });
-</script>
+  }
 
-    <a href="#" class="button" id="copyIP2">Copy Server IP (Bedrock Format)</a>
-
-<script>
-  const copyButton = document.getElementById("copyIP2");
-
-  copyButton.addEventListener("click", (event) => {
-    event.preventDefault(); // prevent page jump
-    const ip = "167.114.213.51";
-    navigator.clipboard.writeText(ip).then(() => {
-      copyButton.textContent = "Copied!";
-      setTimeout(() => {
-        copyButton.textContent = "Copy Server IP (Bedrock Format)";
-      }, 2000);
-    }).catch(err => {
-      console.error("Copy failed", err);
-      copyButton.textContent = "Error!";
-    });
-  });
-</script>
-
-    <a href="#" class="button" id="copyport">Copy Server Port (Bedrock Format)</a>
-
-<script>
-  const copyButton = document.getElementById("copyport");
-
-  copyButton.addEventListener("click", (event) => {
-    event.preventDefault(); // prevent page jump
-    const ip = "25568";
-    navigator.clipboard.writeText(ip).then(() => {
-      copyButton.textContent = "Copied!";
-      setTimeout(() => {
-        copyButton.textContent = "Copy Server Port (Bedrock Format)";
-      }, 2000);
-    }).catch(err => {
-      console.error("Copy failed", err);
-      copyButton.textContent = "Error!";
-    });
-  });
+  setupCopyButton("copyIP1", "167.114.213.51:25568", "Copy Server IP & Port (Java Format)");
+  setupCopyButton("copyIP2", "167.114.213.51", "Copy Server IP (Bedrock Format)");
+  setupCopyButton("copyport", "25568", "Copy Server Port (Bedrock Format)");
 </script>
     
 </body>
