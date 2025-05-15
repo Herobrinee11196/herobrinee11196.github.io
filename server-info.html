@@ -72,7 +72,7 @@ body::after {
 
     <a href="index.html" class="button">Back to Homepage</a>
     <!-- Copy IP Button -->
-    <a href="#" class="button" id="copyIP">Copy Server IP (For Java)</a>
+    <a href="#" class="button" id="copyIP">Copy Server IP (Java Format)</a>
 
 <script>
   const copyButton = document.getElementById("copyIP");
@@ -83,7 +83,7 @@ body::after {
     navigator.clipboard.writeText(ip).then(() => {
       copyButton.textContent = "Copied!";
       setTimeout(() => {
-        copyButton.textContent = "Copy Server IP (For Java)";
+        copyButton.textContent = "Copy Server IP (Java Format)";
       }, 2000);
     }).catch(err => {
       console.error("Copy failed", err);
