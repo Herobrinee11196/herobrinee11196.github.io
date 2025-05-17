@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hamborgor Server Status</title>
-    <link rel="icon" type="image/png" href="favicon.png"> <!-- Favicon added -->
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #000000;
-            color: #74B5E3; /* Light blue for labels */
+            color: #74B5E3;
             text-align: center;
             padding: 50px;
         }
+
         html, body {
             height: 100%;
             margin: 0;
@@ -32,6 +33,10 @@
 
         p {
             font-size: 20px;
+        }
+
+        .highlight-text {
+            color: #FF0000;
         }
 
         .status {
@@ -92,7 +97,7 @@
 </head>
 <body>
     <h1>Server Status</h1>
-    <p>Check the current status of the server below:</p>
+    <p class="highlight-text">Check the current status of the server below:</p>
 
     <!-- Server status display -->
     <div class="status" id="server-status">Loading...</div>
@@ -134,10 +139,7 @@
                 });
         }
 
-        // First check when page loads
         checkServerStatus();
-
-        // Check every 60 seconds (60000ms)
         setInterval(checkServerStatus, 60000);
     </script>
 </body>
