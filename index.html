@@ -63,15 +63,19 @@
   font-weight: bold;
   font-size: 18px;
   text-align: center;
-  line-height: 50px;
   text-decoration: none;
   box-shadow: 0 0 8px #FF0000;
   cursor: url('custom-cursor.png') 0 0, auto;
   transition: background-color 0.3s, color 0.3s, border 0.3s;
+
+  /* This part makes the text stay centered inside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Add this hover style */
-#aiButton.button:hover {
+#aiButton:hover {
   background-color: #000000;
   border: 2px solid #FF0000;
   color: #FF0000;
