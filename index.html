@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Hamborgor</title>
-    <link rel="icon" type="image/png" href="favicon.png"> <!-- Favicon added -->
+    <link rel="icon" type="image/png" href="favicon.png" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,17 +13,17 @@
             padding: 50px;
         }
         html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    cursor: url('custom-cursor.png') 0 0, auto;
-}
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            cursor: url('custom-cursor.png') 0 0, auto;
+        }
 
-body::after {
-    content: "";
-    display: block;
-    height: 100vh;
-}
+        body::after {
+            content: "";
+            display: block;
+            height: 100vh;
+        }
 
         h1 {
             color: #74B5E3; /* Light blue text for the heading */
@@ -42,11 +42,33 @@ body::after {
             font-size: 16px;
             border: none;
             border-radius: 5px;
-
             cursor: url('custom-cursor.png') 0 0, auto;
         }
         .button:hover {
             background-color: #000000;
+            border: 2px solid #FF0000;
+        }
+
+        /* Your Ai button styles */
+        #aiButton {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: url('custom-cursor.png') 0 0, auto;
+            box-shadow: 0 0 8px #FF0000;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #aiButton:hover {
+            background-color: #000000;
+            color: #FF0000;
             border: 2px solid #FF0000;
         }
     </style>
@@ -56,13 +78,10 @@ body::after {
     <p>This is the official site for the Hamborgor Server. 🎉</p>
     <p>Feel free to explore and join the fun!</p>
     
-    <!-- Button linking to server-info.html -->
     <a href="server-info.html" class="button">View Server Info</a>
-
-    <!-- Button linking to server-status.html -->
     <a href="server-status.html" class="button" style="margin-top: 20px;">Check Server Status</a>
-
     <a href="https://drive.google.com/uc?export=download&id=1GJo1BNlqWWKcMj7CPpu7TTpgisaCBDVc" class="button" style="margin-top: 20px;" download>Download App Installer (for PC)</a>
 
+    <button id="aiButton">Ai</button>
 </body>
 </html>
