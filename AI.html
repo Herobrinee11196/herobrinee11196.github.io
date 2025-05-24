@@ -121,7 +121,7 @@
       userInput.value = "";
 
       // Call your backend/chat API here
-      const response = await fetch('/your-backend-endpoint', {
+      const response = await fetch('http://localhost:3000/your-backend-endpoint', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
