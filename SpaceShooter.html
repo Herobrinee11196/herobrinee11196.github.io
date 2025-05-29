@@ -272,11 +272,15 @@
         ctx.fillText("Kills: " + totalKills, 10, 30);
         ctx.fillText("Super Beam: " + superKillCounter + "/30", 10, 60);
 
-        if (gameOver) {
-          ctx.fillStyle = "red";
-          ctx.font = "60px monospace";
-          ctx.fillText("💀GAME OVER💀", canvas.width / 2 - 150, canvas.height / 2);
-        }
+       if (gameOver) {
+  ctx.fillStyle = "red";
+  ctx.font = "60px monospace";
+
+  const text = "💀GAME OVER💀";
+  const textWidth = ctx.measureText(text).width;
+
+  ctx.fillText(text, (canvas.width - textWidth) / 2, canvas.height / 2);
+}
       }
 
       // Fullscreen toggle function
