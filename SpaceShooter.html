@@ -33,18 +33,55 @@
     #fullscreen-btn:hover {
       background: #555;
     }
+    #back-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #222;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      z-index: 1000;
+      user-select: none;
+    }
+    #back-btn:hover {
+      background: #555;
+    }
   </style>
 </head>
 <body>
 
+  <button id="back-btn">Back</button>
   <canvas id="game" width="800" height="600"></canvas>
   <button id="fullscreen-btn">Fullscreen</button>
+  <button id="restart-btn">Restart</button>
 
   <script>
     window.onload = function () {
       const canvas = document.getElementById("game");
       const ctx = canvas.getContext("2d");
       const fullscreenBtn = document.getElementById("fullscreen-btn");
+      const restartBtn = document.getElementById("restart-btn");
+
+restartBtn.addEventListener("click", () => {
+  // Reset game variables
+  lives = 3;
+  score = 0;
+  totalKills = 0;
+  superKillCounter = 0;
+  canUseSuper = false;
+  superBeamActive = false;
+  superBeamTimer = 0;
+  gameOver = false;
+  bullets.length = 0;
+  enemies.length = 0;
+  player.x = canvas.width / 2 - player.width / 2;
+});
+
+      const backBtn = document.getElementById("back-btn");
 
       // Images load
       const playerStraight = new Image();
@@ -92,10 +129,36 @@
       let lives = 3;
       let gameOver = false;
 
-      let score = 0;                   // <-- score added here
+      let score = 0;
 
       let lastFireTime = 0;
-      const fireCooldown = 200;
+      let fireCooldown = 200;  // default cooldown, can be 0 with cheat
+
+      // Cheat states
+      let cheatZeroCooldown = false;  // zbfc01
+      let cheatInfiniteSuper = false; // isb02
+      let cheatTenLives = false;      // tl03
+      let cheatInvincible = false;    // ib04
+      let cheatFullHeal = false;       // hpb05
+
+      // Apply cheat codes here - just for demo, you can tie this to UI/input
+      // For now, let's just hardcode them so you can see how they work
+      // Replace or remove the following lines to test cheats as needed:
+      // Example: activate all cheats for testing
+
+      cheatZeroCooldown = true;  // zbfc01
+      cheatInfiniteSuper = true; // isb02
+      cheatTenLives = true;      // tl03
+      cheatInvincible = true;    // ib04
+      cheatFullHeal = true;      // hpb05
+
+      // Set lives if cheatTenLives is active
+      if (cheatTenLives) lives = 10;
+
+      // Back button event
+      backBtn.addEventListener("click", () => {
+        window.location.href = "Games.html";
+      });
 
       document.addEventListener("keydown", (e) => {
         keys[e.code] = true;
@@ -103,9 +166,12 @@
         if (e.code === "ArrowDown" && canUseSuper && !superBeamActive && !gameOver) {
           superBeamActive = true;
           superBeamTimer = 5000;
-          canUseSuper = false;
-          superKillCounter -= 30;       // subtract 30 kills for using super
-          if (superKillCounter < 0) superKillCounter = 0;
+
+          if (!cheatInfiniteSuper) {
+            canUseSuper = false;
+            superKillCounter -= 30;
+            if (superKillCounter < 0) superKillCounter = 0;
+          }
         }
       });
 
@@ -130,13 +196,12 @@
         if (superKillCounter >= 30) canUseSuper = true;
 
         if (isSuperKill) {
-          score += 300;  // Super beam kill points
+          score += 300;
         } else {
-          score += 100;  // Normal kill points
+          score += 100;
         }
       }
 
-      // Collision functions
       function checkCollision(a, b) {
         const padding = 5;
         return (
@@ -201,16 +266,19 @@
             if (checkCollision(enemies[i], bullets[j])) {
               enemies.splice(i, 1);
               bullets.splice(j, 1);
-              enemyDestroyed(false);  // normal kill
+              enemyDestroyed(false);
               break;
             }
           }
 
           if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
             enemies.splice(i, 1);
-            lives--;
-            if (lives <= 0) {
-              gameOver = true;
+
+            if (!cheatInvincible) {
+              lives--;
+              if (lives <= 0) {
+                gameOver = true;
+              }
             }
           }
 
@@ -229,7 +297,7 @@
               enemy.x <= player.x + player.width / 2 + beamWidth / 2
             ) {
               enemies.splice(i, 1);
-              enemyDestroyed(true);  // super beam kill
+              enemyDestroyed(true);
             }
           });
 
@@ -237,77 +305,107 @@
             superBeamActive = false;
           }
         }
+
+        // Spawn enemies randomly
+        if (Math.random() < 0.02) {
+          spawnEnemy();
+        }
+
+        // Apply cheat effects
+        if (cheatZeroCooldown) {
+          fireCooldown = 0;
+        } else {
+          fireCooldown = 200;
+        }
+
+        if (cheatTenLives) {
+          lives = Math.min(lives, 10);  // Don't allow lives to go above 10 if cheat active
+        }
+
+        if (cheatFullHeal) {
+          // Heal to max - lives is max lives for now
+          // Since no health bar, we treat lives as health, so just set to max lives
+          if (lives < (cheatTenLives ? 10 : 3)) {
+            lives = cheatTenLives ? 10 : 3;
+          }
+        }
       }
 
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Draw player
         ctx.drawImage(player.currentImage, player.x, player.y, player.width, player.height);
 
-        bullets.forEach(b => {
+        // Draw bullets
+        bullets.forEach((b) => {
           ctx.drawImage(bulletImg, b.x, b.y, b.width, b.height);
         });
 
-        enemies.forEach(e => {
+        // Draw enemies
+        enemies.forEach((e) => {
           ctx.drawImage(enemyImg, e.x, e.y, e.width, e.height);
         });
 
+        // Draw lives (hearts)
         for (let i = 0; i < lives; i++) {
-          ctx.drawImage(heartImg, canvas.width - (i + 1) * 40 - 10, 10, 30, 30);
+          ctx.drawImage(heartImg, 10 + i * 30, 10, 25, 25);
         }
 
-        // Score right under lives
-        ctx.fillStyle = "#ffffff";
+        // Draw score
+        ctx.fillStyle = "white";
         ctx.font = "20px monospace";
-        ctx.fillText("Score: " + score, canvas.width - 130, 50);
+        ctx.fillText("Score: " + score, canvas.width - 150, 30);
 
+        // Draw super beam info
+        if (canUseSuper) {
+          ctx.fillStyle = "aqua";
+          ctx.font = "20px monospace";
+          ctx.fillText("Super Beam Ready! (Press ↓)", canvas.width / 2 - 100, 30);
+        }
+
+        // If super beam active, draw beam
         if (superBeamActive) {
-          ctx.fillStyle = "#FF5F1F";
+          ctx.fillStyle = "cyan";
           ctx.fillRect(player.x + player.width / 2 - 5, 0, 10, player.y);
+          ctx.fillStyle = "white";
+          ctx.font = "18px monospace";
+          ctx.fillText("♾️ Super Beam Active ♾️", canvas.width / 2 - 90, player.y - 20);
         }
 
-        // UI kill counts top left
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "20px monospace";
-        ctx.fillText("Kills: " + totalKills, 10, 30);
-        ctx.fillText("Super Beam: " + superKillCounter + "/30", 10, 60);
-
-       if (gameOver) {
-  ctx.fillStyle = "red";
-  ctx.font = "60px monospace";
-
-  const text = "💀GAME OVER💀";
-  const textWidth = ctx.measureText(text).width;
-
-  ctx.fillText(text, (canvas.width - textWidth) / 2, canvas.height / 2);
-}
+        // If game over
+        if (gameOver) {
+          ctx.fillStyle = "red";
+          ctx.font = "50px monospace";
+          ctx.fillText("Game Over!", canvas.width / 2 - 150, canvas.height / 2);
+        }
       }
 
-      // Fullscreen toggle function
-      fullscreenBtn.addEventListener("click", () => {
-        if (!document.fullscreenElement) {
-          canvas.requestFullscreen().catch(err => {
-            alert(`Failed to enter fullscreen: ${err.message}`);
-          });
-        } else {
-          document.exitFullscreen();
-        }
-      });
+      let lastTime = performance.now();
 
-      let lastTime = 0;
-      function gameLoop(time = 0) {
-        const deltaTime = time - lastTime;
-        lastTime = time;
-
-        if (!gameOver && Math.random() < 0.02) spawnEnemy();
+      function gameLoop() {
+        const now = performance.now();
+        const deltaTime = now - lastTime;
+        lastTime = now;
 
         update(deltaTime);
         draw();
+
         requestAnimationFrame(gameLoop);
       }
 
       gameLoop();
+
+      // Fullscreen button
+      fullscreenBtn.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          canvas.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
     };
   </script>
+
 </body>
 </html>
