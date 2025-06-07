@@ -33,7 +33,6 @@
     #fullscreen-btn:hover {
       background: #555;
     }
-    /* === New: Code box style === */
     #codeBox {
       position: fixed;
       top: 20px;
@@ -55,7 +54,6 @@
   <canvas id="game" width="800" height="600"></canvas>
   <button id="fullscreen-btn">Fullscreen</button>
 
-  <!-- 🔑 New: Code input box -->
   <input id="codeBox" type="text" placeholder="Enter ship code...">
 
   <script>
@@ -65,7 +63,7 @@
       const fullscreenBtn = document.getElementById("fullscreen-btn");
       const codeBox = document.getElementById("codeBox");
 
-      // === Load all ship images ===
+      // Load ship images
       const playerStraightDefault = new Image();
       playerStraightDefault.src = "GoingStraight.png";
       const playerLeftDefault = new Image();
@@ -76,10 +74,12 @@
       const toriSprite = new Image();
       toriSprite.src = "torisship.png";
 
+      // Variables for current ship sprites
       let playerStraight = playerStraightDefault;
       let playerLeft = playerLeftDefault;
       let playerRight = playerRightDefault;
 
+      // Get saved ship or default
       let currentShip = localStorage.getItem("playerShip") || "default";
       setShipSprites(currentShip);
 
@@ -93,8 +93,11 @@
           playerLeft = playerLeftDefault;
           playerRight = playerRightDefault;
         }
+        // Update player's current image to reflect ship change
+        player.currentImage = playerStraight;
       }
 
+      // Other images
       const enemyImg = new Image();
       enemyImg.src = "EnemyShip.png";
 
@@ -134,10 +137,11 @@
       let lastFireTime = 0;
       const fireCooldown = 200;
 
-      // Keys tracking
+      // Key handlers
       document.addEventListener("keydown", (e) => {
         keys[e.code] = true;
 
+        // Activate super beam on ArrowDown if ready
         if (e.code === "ArrowDown" && canUseSuper && !superBeamActive && !gameOver) {
           superBeamActive = true;
           superBeamTimer = 5000;
@@ -145,14 +149,8 @@
           superKillCounter -= 30;
           if (superKillCounter < 0) superKillCounter = 0;
         }
-      });
 
-      document.addEventListener("keyup", (e) => {
-        keys[e.code] = false;
-      });
-
-      // Show code box on 'T'
-      document.addEventListener("keydown", (e) => {
+        // Show code box on 'T'
         if ((e.key === "t" || e.key === "T") && codeBox.style.display === "none") {
           codeBox.style.display = "block";
           codeBox.focus();
@@ -160,6 +158,11 @@
         }
       });
 
+      document.addEventListener("keyup", (e) => {
+        keys[e.code] = false;
+      });
+
+      // Code box Enter handler
       codeBox.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           const code = codeBox.value.trim().toLowerCase();
@@ -181,6 +184,7 @@
         }
       });
 
+      // Spawn enemies randomly
       function spawnEnemy() {
         const size = 40;
         enemies.push({
@@ -199,6 +203,7 @@
         score += isSuperKill ? 300 : 100;
       }
 
+      // Collision detection
       function checkCollision(a, b) {
         const padding = 5;
         return (
@@ -209,6 +214,7 @@
         );
       }
 
+      // Player-enemy collision (bottom 4px hitbox)
       function checkPlayerEnemyCollision(player, enemy) {
         const c = player.center;
         const hitboxHeight = 4;
@@ -223,6 +229,7 @@
       function update(deltaTime) {
         if (gameOver) return;
 
+        // Movement & sprite switch
         if (keys["ArrowLeft"]) {
           player.x -= player.speed;
           player.currentImage = playerLeft;
@@ -235,6 +242,7 @@
 
         player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
+        // Shooting bullets on ArrowUp with cooldown
         if (keys["ArrowUp"]) {
           if (performance.now() - lastFireTime > fireCooldown) {
             bullets.push({
@@ -248,46 +256,60 @@
           }
         }
 
+        // Move bullets and remove offscreen
         for (let i = bullets.length - 1; i >= 0; i--) {
           bullets[i].y -= bullets[i].speed;
           if (bullets[i].y < 0) bullets.splice(i, 1);
         }
 
+        // Move enemies and check collisions
         for (let i = enemies.length - 1; i >= 0; i--) {
           enemies[i].y += enemies[i].speed;
 
+          // Bullet collision
+          let hitByBullet = false;
           for (let j = bullets.length - 1; j >= 0; j--) {
             if (checkCollision(enemies[i], bullets[j])) {
               enemies.splice(i, 1);
               bullets.splice(j, 1);
               enemyDestroyed(false);
+              hitByBullet = true;
               break;
             }
           }
+          if (hitByBullet) continue; // Skip further checks for this enemy since it's gone
 
-          if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
+          // Player collision
+          if (checkPlayerEnemyCollision(player, enemies[i])) {
             enemies.splice(i, 1);
             lives--;
             if (lives <= 0) gameOver = true;
+            continue;
           }
 
-          if (i < enemies.length && enemies[i].y > canvas.height) {
+          // Remove enemies off screen bottom
+          if (enemies[i] && enemies[i].y > canvas.height) {
             enemies.splice(i, 1);
           }
         }
 
+        // Super Beam logic - process safely removing enemies inside super beam area
         if (superBeamActive) {
           superBeamTimer -= deltaTime;
-          enemies.forEach((enemy, i) => {
-            const beamWidth = 10;
-            if (
-              enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
-              enemy.x <= player.x + player.width / 2 + beamWidth / 2
-            ) {
+
+          // Collect enemies to remove (don't mutate array while looping)
+          const beamWidth = 10;
+          const beamXStart = player.x + player.width / 2 - beamWidth / 2;
+          const beamXEnd = player.x + player.width / 2 + beamWidth / 2;
+
+          // Filter enemies outside beam and remove enemies inside beam
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            const enemy = enemies[i];
+            if (enemy.x + enemy.width >= beamXStart && enemy.x <= beamXEnd) {
               enemies.splice(i, 1);
               enemyDestroyed(true);
             }
-          });
+          }
 
           if (superBeamTimer <= 0) {
             superBeamActive = false;
@@ -298,34 +320,38 @@
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Draw player
         ctx.drawImage(player.currentImage, player.x, player.y, player.width, player.height);
 
+        // Draw bullets
         bullets.forEach(b => {
           ctx.drawImage(bulletImg, b.x, b.y, b.width, b.height);
         });
 
+        // Draw enemies
         enemies.forEach(e => {
           ctx.drawImage(enemyImg, e.x, e.y, e.width, e.height);
         });
 
+        // Draw lives
         for (let i = 0; i < lives; i++) {
           ctx.drawImage(heartImg, canvas.width - (i + 1) * 40 - 10, 10, 30, 30);
         }
 
+        // Draw score & kills
         ctx.fillStyle = "#ffffff";
         ctx.font = "20px monospace";
         ctx.fillText("Score: " + score, canvas.width - 130, 50);
+        ctx.fillText("Kills: " + totalKills, 10, 30);
+        ctx.fillText("Super Beam: " + superKillCounter + "/30", 10, 60);
 
+        // Draw super beam if active
         if (superBeamActive) {
           ctx.fillStyle = "#FF5F1F";
           ctx.fillRect(player.x + player.width / 2 - 5, 0, 10, player.y);
         }
 
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "20px monospace";
-        ctx.fillText("Kills: " + totalKills, 10, 30);
-        ctx.fillText("Super Beam: " + superKillCounter + "/30", 10, 60);
-
+        // Game over text
         if (gameOver) {
           ctx.fillStyle = "red";
           ctx.font = "60px monospace";
@@ -335,6 +361,7 @@
         }
       }
 
+      // Fullscreen toggle
       fullscreenBtn.addEventListener("click", () => {
         if (!document.fullscreenElement) {
           canvas.requestFullscreen().catch(err => {
