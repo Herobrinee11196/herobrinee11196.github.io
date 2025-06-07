@@ -153,9 +153,10 @@
 
         // ✨ Show code box on 'T' key
         if (e.key === "t" || e.key === "T") {
-          codeBox.style.display = "block";
-          codeBox.focus();
-        }
+  codeBox.style.display = "block";
+  codeBox.focus();
+  e.preventDefault(); // stop that 't' from typing in the box
+}
       });
 
       document.addEventListener("keyup", (e) => {
