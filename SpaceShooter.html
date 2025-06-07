@@ -152,12 +152,13 @@
         }
 
         // ✨ Show code box on 'T' key
-        if (e.key === "t" || e.key === "T") {
-  codeBox.style.display = "block";
-  codeBox.focus();
-  e.preventDefault(); // stop that 't' from typing in the box
-}
-      });
+        document.addEventListener("keydown", (e) => {
+  if ((e.key === "t" || e.key === "T") && codeBox.style.display === "none") {
+    codeBox.style.display = "block";
+    codeBox.focus();
+    e.preventDefault(); // only stop typing when opening the box
+  }
+});
 
       document.addEventListener("keyup", (e) => {
         keys[e.code] = false;
