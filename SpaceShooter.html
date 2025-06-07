@@ -66,8 +66,6 @@
       const codeBox = document.getElementById("codeBox");
 
       // === Load all ship images ===
-
-      // Default ship
       const playerStraightDefault = new Image();
       playerStraightDefault.src = "GoingStraight.png";
       const playerLeftDefault = new Image();
@@ -75,16 +73,13 @@
       const playerRightDefault = new Image();
       playerRightDefault.src = "MovingRight.png";
 
-      // Tori ship (one sprite used for all directions)
       const toriSprite = new Image();
-      toriSprite.src = "torisship.png"; // Change to your actual file name
+      toriSprite.src = "torisship.png";
 
-      // === Active ship images ===
       let playerStraight = playerStraightDefault;
       let playerLeft = playerLeftDefault;
       let playerRight = playerRightDefault;
 
-      // === Ship selector
       let currentShip = localStorage.getItem("playerShip") || "default";
       setShipSprites(currentShip);
 
@@ -100,7 +95,6 @@
         }
       }
 
-      // === Enemy & bullet images
       const enemyImg = new Image();
       enemyImg.src = "EnemyShip.png";
 
@@ -140,6 +134,7 @@
       let lastFireTime = 0;
       const fireCooldown = 200;
 
+      // Keys tracking
       document.addEventListener("keydown", (e) => {
         keys[e.code] = true;
 
@@ -150,21 +145,21 @@
           superKillCounter -= 30;
           if (superKillCounter < 0) superKillCounter = 0;
         }
-
-        // ✨ Show code box on 'T' key
-        document.addEventListener("keydown", (e) => {
-  if ((e.key === "t" || e.key === "T") && codeBox.style.display === "none") {
-    codeBox.style.display = "block";
-    codeBox.focus();
-    e.preventDefault(); // only stop typing when opening the box
-  }
-});
+      });
 
       document.addEventListener("keyup", (e) => {
         keys[e.code] = false;
       });
 
-      // ✅ Handle code box Enter key
+      // Show code box on 'T'
+      document.addEventListener("keydown", (e) => {
+        if ((e.key === "t" || e.key === "T") && codeBox.style.display === "none") {
+          codeBox.style.display = "block";
+          codeBox.focus();
+          e.preventDefault();
+        }
+      });
+
       codeBox.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           const code = codeBox.value.trim().toLowerCase();
@@ -228,7 +223,6 @@
       function update(deltaTime) {
         if (gameOver) return;
 
-        // Move player
         if (keys["ArrowLeft"]) {
           player.x -= player.speed;
           player.currentImage = playerLeft;
@@ -254,13 +248,11 @@
           }
         }
 
-        // Bullets
         for (let i = bullets.length - 1; i >= 0; i--) {
           bullets[i].y -= bullets[i].speed;
           if (bullets[i].y < 0) bullets.splice(i, 1);
         }
 
-        // Enemies
         for (let i = enemies.length - 1; i >= 0; i--) {
           enemies[i].y += enemies[i].speed;
 
@@ -284,7 +276,6 @@
           }
         }
 
-        // Super beam
         if (superBeamActive) {
           superBeamTimer -= deltaTime;
           enemies.forEach((enemy, i) => {
