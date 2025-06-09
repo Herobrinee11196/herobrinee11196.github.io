@@ -154,12 +154,8 @@
         // ✨ Show code box on 'C' key
         if (e.key === "t" || e.key === "T") {
   codeBox.style.display = "block";
+  codeBox.value = ""; // clear it!
   codeBox.focus();
-
-  // 👇 Simulate a delete
-  requestAnimationFrame(() => {
-    codeBox.value = codeBox.value.slice(1); // removes the first character
-  });
 }
       });
 
