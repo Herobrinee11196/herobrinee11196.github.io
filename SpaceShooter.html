@@ -56,7 +56,7 @@
   <button id="fullscreen-btn">Fullscreen</button>
 
   <!-- 🔑 New: Code input box -->
-  <input id="codeBox" type="text" placeholder="Enter ship code...">
+  <input id="codeBox" type="text" placeholder="Enter code...">
 
   <script>
     window.onload = function () {
@@ -153,9 +153,14 @@
 
         // ✨ Show code box on 'C' key
         if (e.key === "t" || e.key === "T") {
-          codeBox.style.display = "block";
-          codeBox.focus();
-        }
+  codeBox.style.display = "block";
+  codeBox.focus();
+
+  // 👇 Simulate a delete
+  requestAnimationFrame(() => {
+    codeBox.value = codeBox.value.slice(1); // removes the first character
+  });
+}
       });
 
       document.addEventListener("keyup", (e) => {
@@ -166,19 +171,15 @@
       codeBox.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           const code = codeBox.value.trim().toLowerCase();
-          if (code === "tori") {
-            currentShip = "tori";
-            localStorage.setItem("playerShip", currentShip);
-            setShipSprites(currentShip);
-            alert("🚀 Tori ship unlocked!");
-          } else if (code === "default") {
-            currentShip = "default";
-            localStorage.setItem("playerShip", currentShip);
-            setShipSprites(currentShip);
-            alert("🛸 Back to default ship.");
-          } else {
-            alert("❌ Code not recognized.");
-          }
+          
+          if (code === "tori" || code === "default") {
+  currentShip = code;
+  localStorage.setItem("playerShip", currentShip);
+  setShipSprites(currentShip);
+} 
+codeBox.value = "";
+codeBox.style.display = "none";
+
           codeBox.value = "";
           codeBox.style.display = "none";
         }
