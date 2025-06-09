@@ -141,23 +141,29 @@
       const fireCooldown = 200;
 
       document.addEventListener("keydown", (e) => {
-        keys[e.code] = true;
+  // ✨ Open code box with T, but don’t type the T inside it
+  if ((e.key === "t" || e.key === "T") && codeBox.style.display !== "block") {
+    e.preventDefault();              // Stop that first 't' from being entered
+    codeBox.value = "";              // Make sure it’s blank
+    codeBox.style.display = "block";
+    codeBox.focus();
+    return;                          // Skip the rest
+  }
 
-        if (e.code === "ArrowDown" && canUseSuper && !superBeamActive && !gameOver) {
-          superBeamActive = true;
-          superBeamTimer = 5000;
-          canUseSuper = false;
-          superKillCounter -= 30;
-          if (superKillCounter < 0) superKillCounter = 0;
-        }
+  // 🛑 Don't trigger game controls if code box is active
+  if (codeBox.style.display === "block") return;
 
-        // ✨ Show code box on 'C' key
-        if (e.key === "t" || e.key === "T") {
-  codeBox.style.display = "block";
-  codeBox.value = ""; // clear it!
-  codeBox.focus();
-}
-      });
+  // 🎮 Game controls
+  keys[e.code] = true;
+
+  if (e.code === "ArrowDown" && canUseSuper && !superBeamActive && !gameOver) {
+    superBeamActive = true;
+    superBeamTimer = 5000;
+    canUseSuper = false;
+    superKillCounter -= 30;
+    if (superKillCounter < 0) superKillCounter = 0;
+  }
+});
 
       document.addEventListener("keyup", (e) => {
         keys[e.code] = false;
