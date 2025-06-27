@@ -86,6 +86,8 @@
       gioRight.src = "GioRight.png";
       const gioStraight = new Image();
       gioStraight.src = "GioStraight.png";
+      const gioBulletImg = new Image();
+      gioBulletImg.src = "GioBullet.png";  // your custom bullet image for Gio
 
       // === Active ship images ===
       let playerStraight = playerStraightDefault;
@@ -321,7 +323,11 @@
         ctx.drawImage(player.currentImage, player.x, player.y, player.width, player.height);
 
         bullets.forEach(b => {
+        if (currentShip === "gio") {
+          ctx.drawImage(gioBulletImg, b.x, b.y, b.width, b.height);
+        } else {
           ctx.drawImage(bulletImg, b.x, b.y, b.width, b.height);
+        }
         });
 
         enemies.forEach(e => {
