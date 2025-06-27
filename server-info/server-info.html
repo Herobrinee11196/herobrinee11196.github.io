@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamborgor Server Information</title>
+    <link rel="icon" type="image/png" href="favicon.png"> <!-- Favicon added -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+            color: #74B5E3; /* Light blue for labels */
+            text-align: center;
+            padding: 50px;
+        }
+        html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    cursor: url('custom-cursor.png') 0 0, auto;
+}
+
+body::after {
+    content: "";
+    display: block;
+    height: 100vh;
+}
+
+        h1 {
+            color: #74B5E3;
+        }
+        p {
+            font-size: 20px;
+        }
+        .value {
+            color: #FF0000; /* Bright red for actual values */
+        }
+        .subheadline {
+            color: #74B5E3;
+            font-size: 18px; /* Slightly smaller than the main headline */
+            margin-top: -10px;
+        }
+        .button {
+            background-color: #FF0000;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+
+            cursor: url('custom-cursor.png') 0 0, auto;
+        }
+        .button:hover {
+            background-color: #000000;
+            border: 2px solid #FF0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hamborgor Server Information</h1>
+    <p class="subheadline">Compatible with Java & Bedrock</p>
+    <p><strong>Server Name:</strong> <span class="value">Hamborgor</span></p>
+    <p><strong>IP Address:</strong> <span class="value">167.114.213.51</span></p>
+    <p><strong>Port:</strong> <span class="value">25568</span></p>
+
+     <h1>Mods:</h1>
+    <p><span class="value">Simple Voice Chat</span></p>
+    <p><span class="value">World Edit (for admins only)</span></p>
+    <p><span class="value">Geyser & Floodgate (for Bedrock compatibility)</span></p>
+
+    <!-- Copy IP Button -->
+<a href="#" class="button" id="copyIP1">Copy Server IP & Port (Java Format)</a>
+<a href="#" class="button" id="copyIP2">Copy Server IP (Bedrock Format)</a>
+<a href="#" class="button" id="copyport">Copy Server Port (Bedrock Format)</a>
+
+<a href="index.html" class="button">Back to Homepage</a>
+    
+<script>
+  function setupCopyButton(id, text, originalText) {
+    const btn = document.getElementById(id);
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "Copied!";
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      }).catch(err => {
+        console.error("Copy failed", err);
+        btn.textContent = "Error!";
+      });
+    });
+  }
+
+  setupCopyButton("copyIP1", "167.114.213.51:25568", "Copy Server IP & Port (Java Format)");
+  setupCopyButton("copyIP2", "167.114.213.51", "Copy Server IP (Bedrock Format)");
+  setupCopyButton("copyport", "25568", "Copy Server Port (Bedrock Format)");
+</script>
+    
+</body>
+</html>
