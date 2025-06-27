@@ -79,6 +79,14 @@
       const toriSprite = new Image();
       toriSprite.src = "torisship.png"; // Change to your actual file name
 
+      // GIO ship (different sprite per direction)
+      const gioLeft = new Image();
+      gioLeft.src = "GioLeft.png";
+      const gioRight = new Image();
+      gioRight.src = "GioRight.png";
+      const gioStraight = new Image();
+      gioStraight.src = "GioStraight.png";
+
       // === Active ship images ===
       let playerStraight = playerStraightDefault;
       let playerLeft = playerLeftDefault;
@@ -89,16 +97,20 @@
       setShipSprites(currentShip);
 
       function setShipSprites(shipName) {
-        if (shipName === "tori") {
-          playerStraight = toriSprite;
-          playerLeft = toriSprite;
-          playerRight = toriSprite;
-        } else {
-          playerStraight = playerStraightDefault;
-          playerLeft = playerLeftDefault;
-          playerRight = playerRightDefault;
-        }
-      }
+  if (shipName === "tori") {
+    playerStraight = toriSprite;
+    playerLeft = toriSprite;
+    playerRight = toriSprite;
+  } else if (shipName === "gio") {
+    playerStraight = gioStraight;
+    playerLeft = gioLeft;
+    playerRight = gioRight;
+  } else {
+    playerStraight = playerStraightDefault;
+    playerLeft = playerLeftDefault;
+    playerRight = playerRightDefault;
+  }
+}
 
       // === Enemy & bullet images
       const enemyImg = new Image();
@@ -171,21 +183,19 @@
 
       // ✅ Handle code box Enter key
       codeBox.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          const code = codeBox.value.trim().toLowerCase();
-          
-          if (code === "tori" || code === "default") {
-  currentShip = code;
-  localStorage.setItem("playerShip", currentShip);
-  setShipSprites(currentShip);
-} 
-codeBox.value = "";
-codeBox.style.display = "none";
+  if (e.key === "Enter") {
+    const code = codeBox.value.trim().toLowerCase();
 
-          codeBox.value = "";
-          codeBox.style.display = "none";
-        }
-      });
+    if (code === "tori" || code === "default" || code === "gio") {
+      currentShip = code; // either "tori", "default", or "gio"
+      localStorage.setItem("playerShip", currentShip);
+      setShipSprites(currentShip);
+    }
+
+    codeBox.value = "";
+    codeBox.style.display = "none";
+  }
+});
 
       function spawnEnemy() {
         const size = 40;
