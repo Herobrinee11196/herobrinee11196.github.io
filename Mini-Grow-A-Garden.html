@@ -18,7 +18,7 @@
   #field {
     display: grid;
     grid-gap: 5px;
-    margin: 40px 0 20px 0;
+    margin: 20px 0;
     justify-content: center;
     align-content: center;
   }
@@ -65,11 +65,12 @@
     border-radius: 50%;
     z-index: 60;
   }
-  .toolbar, #seeds {
+  .toolbar {
     margin: 10px;
+    display: flex;
+    gap: 5px;
   }
   button {
-    margin: 0 5px;
     padding: 5px 10px;
     border-radius: 5px;
     border: none;
@@ -85,21 +86,42 @@
   #shopContent, #bagContent {
     display: none;
     margin: 10px;
+    flex-wrap: wrap;
+  }
+  .hotbar {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .hotbar-slot {
+    width: 60px;
+    height: 60px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .hotbar-slot.selected {
+    box-shadow: 0 0 10px 3px #00ffff;
   }
 </style>
 </head>
 <body>
 <h1>Mini Grow-a-Garden 🌱</h1>
 <div class="toolbar">
+  <button onclick="toggleSeeds()">🌱 Seeds</button>
+  <button onclick="toggleGear()">⚙️ Gear</button>
   <button onclick="buyPlot()">➕ Add Plot (<span id='plotCost'>2</span>💰)</button>
-  <button onclick="tool='shovel'">🧹 Shovel</button>
-  <button onclick="toggleShop()">🛒 Shop</button>
-  <button onclick="toggleBag()">🎒 Bag</button>
 </div>
 <div id="shopContent"></div>
 <div id="bagContent"></div>
 <div id="field"></div>
+<div class="hotbar" id="hotbar"></div>
 <div id="coins">💰 20</div>
+
 <script>
 let tool='plant';
 let seed=null;
@@ -113,12 +135,16 @@ const CROPS = {
   tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true }
 };
 let grid = [];
-let inventory = {}; // NEW inventory
+let inventory = {seeds:{}, gear:{}};
+let hotbar = [null,null,null];
+let selectedHotbar = 0;
+
 const field=document.getElementById('field');
 const shopContent=document.getElementById('shopContent');
 const bagContent=document.getElementById('bagContent');
 const coinsDiv=document.getElementById('coins');
 const plotCostSpan=document.getElementById('plotCost');
+const hotbarDiv=document.getElementById('hotbar');
 
 // --- INITIAL PLOTS ---
 for(let i=0;i<4;i++) grid.push({crop:null,growth:0,mutations:[],wetDrops:[]});
@@ -127,16 +153,11 @@ for(let i=0;i<4;i++) grid.push({crop:null,growth:0,mutations:[],wetDrops:[]});
 function saveProgress() {
     const saveData = {
         coins: coins,
-        plots: grid.map(plot => ({
-            crop: plot.crop,
-            growth: plot.growth,
-            mutations: plot.mutations,
-            wetDrops: []
-        })),
+        plots: grid.map(p=>({crop:p.crop,growth:p.growth,mutations:p.mutations,wetDrops:[]})),
         nextPlotPrice: nextPlotCost,
-        seed: seed,
-        tool: tool,
-        inventory: inventory
+        inventory: inventory,
+        hotbar: hotbar,
+        selectedHotbar: selectedHotbar
     };
     localStorage.setItem('farmSave', JSON.stringify(saveData));
 }
@@ -144,49 +165,58 @@ function saveProgress() {
 function loadProgress() {
     const saveData = JSON.parse(localStorage.getItem('farmSave'));
     if(!saveData) return;
-
     coins = saveData.coins || 20;
     nextPlotCost = saveData.nextPlotPrice || 2;
-    seed = saveData.seed || null;
-    tool = saveData.tool || 'plant';
-    inventory = saveData.inventory || {};
-
-    grid = saveData.plots.map(p => ({
-        crop: p.crop,
-        growth: p.growth,
-        mutations: p.mutations || [],
-        wetDrops: []
-    }));
-
+    inventory = saveData.inventory || {seeds:{}, gear:{}};
+    hotbar = saveData.hotbar || [null,null,null];
+    selectedHotbar = saveData.selectedHotbar || 0;
+    grid = saveData.plots.map(p=>({crop:p.crop,growth:p.growth,mutations:p.mutations||[],wetDrops:[]}));
     render();
     renderBag();
+    renderHotbar();
 }
 
-// auto-save every 5 sec
 setInterval(saveProgress,5000);
 loadProgress();
 
-// --- SHOP & BAG ---
-function toggleShop(){ shopContent.style.display = shopContent.style.display==='none'?'block':'none'; }
-function toggleBag(){ bagContent.style.display = bagContent.style.display==='none'?'block':'none'; renderBag(); }
+// --- SHOP TOGGLES ---
+function toggleSeeds(){
+    shopContent.innerHTML='';
+    shopContent.style.display = shopContent.style.display==='none'?'flex':'none';
+    Object.keys(CROPS).sort((a,b)=>CROPS[a].seedCost-CROPS[b].seedCost).forEach(k=>{
+        let b=document.createElement('button');
+        b.textContent=CROPS[k].emoji+' '+k+' ('+CROPS[k].seedCost+'💰)';
+        b.onclick=()=>buySeed(k);
+        shopContent.appendChild(b);
+    });
+}
+function toggleGear(){
+    shopContent.innerHTML='';
+    shopContent.style.display = shopContent.style.display==='none'?'flex':'none';
+    let b=document.createElement('button');
+    b.textContent='💧 Water x10 (50000💰)';
+    b.onclick=()=>buyWater();
+    shopContent.appendChild(b);
+}
 
-function addToInventory(item){
-    if(!inventory[item]) inventory[item]=0;
-    inventory[item]++;
+// --- BUY FUNCTIONS ---
+function addToInventory(type,item){
+    if(!inventory[type][item]) inventory[type][item]=0;
+    inventory[type][item]++;
     renderBag();
 }
 
 function buySeed(crop){
     if(coins>=CROPS[crop].seedCost){
         coins-=CROPS[crop].seedCost;
-        addToInventory(crop);
+        addToInventory('seeds',crop);
         render();
     }
 }
 function buyWater(){
-    if(coins>=10){
-        coins-=10;
-        addToInventory('water');
+    if(coins>=50000){
+        coins-=50000;
+        addToInventory('gear','water');
         render();
     }
 }
@@ -194,52 +224,55 @@ function buyPlot(){
     if(coins>=nextPlotCost){
         coins-=nextPlotCost;
         grid.push({crop:null,growth:0,mutations:[],wetDrops:[]});
-        nextPlotCost = Math.ceil(nextPlotCost * priceMultiplier);
+        nextPlotCost = Math.ceil(nextPlotCost*priceMultiplier);
         plotCostSpan.textContent = nextPlotCost;
         render();
     }
 }
 
-// sorted shop
-Object.keys(CROPS).sort((a,b)=>CROPS[a].seedCost-CROPS[b].seedCost).forEach(k=>{
-    let b=document.createElement('button');
-    b.textContent=CROPS[k].emoji+' '+k+' ('+CROPS[k].seedCost+'💰)';
-    b.onclick=()=>buySeed(k);
-    shopContent.appendChild(b);
-});
-let waterBtn=document.createElement('button');
-waterBtn.textContent='💧 Water (10💰)';
-waterBtn.onclick=()=>buyWater();
-shopContent.appendChild(waterBtn);
-
+// --- BAG ---
 function renderBag(){
     bagContent.innerHTML='';
-    for(let item in inventory){
-        if(inventory[item]>0){
-            let b=document.createElement('button');
-            let label = item==='water' ? `💧 Water x${inventory[item]}` : `${CROPS[item].emoji} ${item} x${inventory[item]}`;
-            b.textContent=label;
-            b.onclick=()=>{
-                if(item==='water'){ tool='water'; seed=null; }
-                else { seed=item; tool='plant'; }
-            };
-            bagContent.appendChild(b);
+    for(let type in inventory){
+        for(let item in inventory[type]){
+            if(inventory[type][item]>0){
+                let b=document.createElement('button');
+                let label = type==='gear'? `💧 Water x${inventory[type][item]}` : `${CROPS[item].emoji} ${item} x${inventory[type][item]}`;
+                b.textContent=label;
+                b.onclick=()=>{
+                    if(type==='gear'){ tool='water'; seed=null; }
+                    else { seed=item; tool='plant'; }
+                };
+                bagContent.appendChild(b);
+            }
         }
     }
 }
 
-// --- RENDER & INTERACTIONS ---
+// --- HOTBAR ---
+function renderHotbar(){
+    hotbarDiv.innerHTML='';
+    hotbar.forEach((item,i)=>{
+        let slot=document.createElement('div');
+        slot.className='hotbar-slot'+(i===selectedHotbar?' selected':'');
+        slot.textContent = item ? (item==='water'?'💧':CROPS[item].emoji) : '';
+        slot.onclick=()=>{selectedHotbar=i; tool=item==='water'?'water':'plant'; seed=item!=='water'?item:null; renderHotbar();}
+        hotbarDiv.appendChild(slot);
+    });
+}
+
+// --- FIELD ---
 function render(){
     field.innerHTML='';
     let cols = Math.ceil(Math.sqrt(grid.length));
-    field.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+    field.style.gridTemplateColumns = `repeat(${cols},80px)`;
     grid.forEach((p,i)=>{
         let b=document.createElement('div');
         b.className='plot';
         if(p.crop){
             let g=document.createElement('div');
             g.className='growth';
-            g.textContent=Math.floor(p.growth)+'%' + (p.mutations.length ? ' ('+p.mutations.join(',')+')' : '');
+            g.textContent=Math.floor(p.growth)+'%' + (p.mutations.length ? ' ('+p.mutations.join(',')+')':'');
             b.appendChild(g);
             let c=document.createElement('span');
             c.textContent=CROPS[p.crop].emoji;
@@ -258,6 +291,7 @@ function render(){
         field.appendChild(b);
     });
     coinsDiv.textContent=`💰 ${coins}`;
+    renderHotbar();
 }
 
 function createDroplets(plot){
@@ -276,16 +310,16 @@ function createDroplets(plot){
 function onTileClick(i,plot){
     let p=grid[i];
     if(tool==='plant' && seed){
-        if(!p.crop && inventory[seed]>0){
+        if(!p.crop && inventory['seeds'][seed]>0){
             p.crop=seed; p.growth=0; p.mutations=[];
-            inventory[seed]--;
+            inventory['seeds'][seed]--;
         }
     } else if(tool==='water'){
-        if(p.crop && inventory['water']>0){
+        if(p.crop && inventory['gear']['water']>0){
             p.growth+=15;
             createDroplets(plot);
             if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet');
-            inventory['water']--;
+            inventory['gear']['water']--;
         }
     } else if(tool==='shovel'){
         grid[i]={crop:null,growth:0,mutations:[],wetDrops:[]};
