@@ -212,8 +212,11 @@ function renderBag(){
         for(let item in inventory[type]){
             if(inventory[type][item]>0){
                 let b=document.createElement('button');
-                let label = type==='gear'? `${item==='shovel'?'🪓 Shovel':'💧 Water x'+inventory[type][item]}` : `${CROPS[item].emoji} ${item} x${inventory[type][item]}`;
-                b.textContent=label;
+                b.textContent = type==='gear'? 
+                    (item==='shovel'?'🪓 Shovel':'💧 Water x'+inventory[type][item]) :
+                    `${CROPS[item].emoji} ${item} x${inventory[type][item]}`;
+                b.dataset.itemId = item;
+                makeDraggable(b);
                 b.onclick=()=>{ 
                     if(type==='gear'){ tool=item==='shovel'?'shovel':'water'; seed=null; }
                     else { seed=item; tool='plant'; }
@@ -270,6 +273,8 @@ function renderHotbar(){
             seed=selectedItem && selectedItem!=='water' && selectedItem!=='shovel'?selectedItem:null;
             renderHotbar();
         }
+
+        // Drag & Drop hotbar slots
         slot.draggable=true;
         slot.ondragstart=e=>{
             e.dataTransfer.setData('text/plain', i);
@@ -280,10 +285,31 @@ function renderHotbar(){
         slot.ondrop=e=>{
             e.preventDefault();
             const fromIndex=parseInt(e.dataTransfer.getData('text/plain'));
+            // Swap slots
             [hotbar[fromIndex],hotbar[i]]=[hotbar[i],hotbar[fromIndex]];
             renderHotbar();
         };
+
+        // Accept drag from bag
+        slot.addEventListener('dragover', e=>e.preventDefault());
+        slot.addEventListener('drop', e=>{
+            e.preventDefault();
+            const itemId = e.dataTransfer.getData('text/plain');
+            if(itemId){
+                hotbar[i]=itemId;
+                renderHotbar();
+            }
+        });
+
         hotbarDiv.appendChild(slot);
+    });
+}
+
+// Make inventory items draggable
+function makeDraggable(itemElement){
+    itemElement.draggable=true;
+    itemElement.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', itemElement.dataset.itemId);
     });
 }
 
