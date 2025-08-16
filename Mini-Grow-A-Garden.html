@@ -12,7 +12,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
     color: white;
   }
   #field {
@@ -265,10 +265,24 @@ function renderHotbar(){
         slot.textContent = item ? (item==='water'?'💧':CROPS[item]?.emoji||'🪓') : '';
         slot.onclick=()=>{
             selectedHotbar=i;
-            tool=item==='water'?'water':item==='shovel'?'shovel':'plant';
-            seed=item && item!=='water' && item!=='shovel'?item:null;
+            let selectedItem = hotbar[i];
+            tool=selectedItem==='water'?'water':selectedItem==='shovel'?'shovel':'plant';
+            seed=selectedItem && selectedItem!=='water' && selectedItem!=='shovel'?selectedItem:null;
             renderHotbar();
         }
+        slot.draggable=true;
+        slot.ondragstart=e=>{
+            e.dataTransfer.setData('text/plain', i);
+        };
+        slot.ondragover=e=>{
+            e.preventDefault();
+        };
+        slot.ondrop=e=>{
+            e.preventDefault();
+            const fromIndex=parseInt(e.dataTransfer.getData('text/plain'));
+            [hotbar[fromIndex],hotbar[i]]=[hotbar[i],hotbar[fromIndex]];
+            renderHotbar();
+        };
         hotbarDiv.appendChild(slot);
     });
 }
@@ -362,45 +376,6 @@ setInterval(()=>{
 },1000);
 
 render();
-
-// --- HOTBAR DRAG & DROP ---
-function enableHotbarDrag(){
-    hotbarDiv.querySelectorAll('.hotbar-slot').forEach((slot,i)=>{
-        slot.draggable = true;
-        slot.ondragstart = e=>{
-            e.dataTransfer.setData('text/plain', i); // index of dragged slot
-        };
-        slot.ondragover = e=>{
-            e.preventDefault();
-        };
-        slot.ondrop = e=>{
-            e.preventDefault();
-            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-            const temp = hotbar[fromIndex];
-            hotbar[fromIndex] = hotbar[i];
-            hotbar[i] = temp;
-            renderHotbar();
-        };
-    });
-}
-
-// update renderHotbar to call enableHotbarDrag at the end
-function renderHotbar(){
-    hotbarDiv.innerHTML='';
-    hotbar.forEach((item,i)=>{
-        let slot=document.createElement('div');
-        slot.className='hotbar-slot'+(i===selectedHotbar?' selected':'');
-        slot.textContent = item ? (item==='water'?'💧':CROPS[item]?.emoji||'🪓') : '';
-        slot.onclick=()=>{
-            selectedHotbar=i;
-            tool=item==='water'?'water':item==='shovel'?'shovel':'plant';
-            seed=item && item!=='water' && item!=='shovel'?item:null;
-            renderHotbar();
-        }
-        hotbarDiv.appendChild(slot);
-    });
-    enableHotbarDrag();
-}
 </script>
 </body>
 </html>
