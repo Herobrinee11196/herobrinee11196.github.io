@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Grow-a-Garden</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #8b5e3c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: white;
+  }
+  #field {
+    display: grid;
+    grid-gap: 5px;
+    margin: 40px 0 20px 0;
+    justify-content: center;
+    align-content: center;
+  }
+  .plot {
+    width: 80px;
+    height: 80px;
+    background: #a0522d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .growth {
+    position: absolute;
+    top: 0;
+    font-size: 14px;
+    color: #fff;
+    z-index: 200;
+    pointer-events: none;
+    text-shadow: 0 0 3px #000;
+    width: 100%;
+    text-align: center;
+  }
+  .droplet {
+    position: absolute;
+    border-radius: 50%;
+    background: #00f;
+    opacity: 0;
+    animation: fadeOut 2s forwards;
+    z-index: 50;
+  }
+  @keyframes fadeOut {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(10px); }
+  }
+  .wet-drop {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #00f;
+    border-radius: 50%;
+    z-index: 60;
+  }
+  .toolbar, #seeds {
+    margin: 10px;
+  }
+  button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+  }
+  #coins {
+    margin-top: 5px;
+    font-weight: bold;
+  }
+  .frozen {
+    filter: hue-rotate(200deg) brightness(1.2);
+  }
+  #shopContent {
+    display: none;
+    margin: 10px;
+  }
+</style>
+</head>
+<body>
+<h1>Mini Grow-a-Garden 🌱</h1>
+<div class="toolbar">
+  <button onclick="buyWater()">💧 Water (10💰)</button>
+  <button onclick="tool='shovel'">🧹 Shovel</button>
+  <button onclick="toggleShop()">🛒 Shop</button>
+  <button onclick="buyPlot()">➕ Add Plot (<span id='plotCost'>2</span>💰)</button>
+</div>
+<div id="shopContent"></div>
+<div id="field"></div>
+<div id="coins">💰 20</div>
+<script>
+let gridSize = 2;
+let nextPlotCost = 2;
+const priceMultiplier = 1.2;
+const CROPS = {
+  carrot: { emoji: '🥕', growTime: 5, baseSell: 18, seedCost: 10, regrow:false },
+  strawberry: { emoji: '🍓', growTime: 5, baseSell: 14, seedCost: 50, regrow:false },
+  blueberry: { emoji: '🫐', growTime: 6, baseSell: 18, seedCost: 400, regrow:true },
+  tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true }
+};
+let grid = Array(gridSize*gridSize).fill().map(()=>({crop:null, growth:0, mutations:[], wetDrops:[]}));
+let tool='plant';
+let seed='carrot';
+let coins=20;
+const field=document.getElementById('field');
+const shopContent=document.getElementById('shopContent');
+const coinsDiv=document.getElementById('coins');
+const plotCostSpan = document.getElementById('plotCost');
+
+function toggleShop(){ shopContent.style.display = shopContent.style.display==='none' ? 'block' : 'none'; }
+function buySeed(crop){ if(coins>=CROPS[crop].seedCost){ coins-=CROPS[crop].seedCost; seed=crop; tool='plant'; render(); } }
+function buyWater(){ if(coins>=10){ tool='water'; coins-=10; render(); } }
+function buyPlot(){
+  if(coins>=nextPlotCost){
+    coins -= nextPlotCost;
+    grid.push({crop:null, growth:0, mutations:[], wetDrops:[]});
+    nextPlotCost = Math.ceil(nextPlotCost * priceMultiplier);
+    plotCostSpan.textContent = nextPlotCost;
+    render();
+  }
+}
+
+let sortedCrops = Object.keys(CROPS).sort((a,b)=>CROPS[a].seedCost - CROPS[b].seedCost);
+sortedCrops.forEach(k => {
+  let b=document.createElement('button');
+  b.textContent=CROPS[k].emoji+' '+k+' ('+CROPS[k].seedCost+'💰)';
+  b.onclick=()=>buySeed(k);
+  shopContent.appendChild(b);
+});
+
+function render(){
+  field.innerHTML='';
+  let cols = Math.ceil(Math.sqrt(grid.length));
+  field.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+  grid.forEach((p,i)=>{
+    let b=document.createElement('div');
+    b.className='plot';
+    if(p.crop){
+      let g=document.createElement('div');
+      g.className='growth';
+      g.textContent=Math.floor(p.growth)+'%' + (p.mutations.length ? ' ('+p.mutations.join(',')+')' : '');
+      b.appendChild(g);
+      let c=document.createElement('span');
+      c.textContent=CROPS[p.crop].emoji;
+      if(p.mutations.includes('frozen')) c.classList.add('frozen');
+      b.appendChild(c);
+      if(p.mutations.includes('wet') && p.wetDrops.length===0){
+        let drop = document.createElement('div');
+        drop.className='wet-drop';
+        drop.style.left=Math.random()*70+'px';
+        drop.style.top=Math.random()*70+'px';
+        b.appendChild(drop);
+        p.wetDrops.push(drop);
+      }
+    }
+    b.onclick=()=>onTileClick(i,b);
+    field.appendChild(b);
+  });
+  coinsDiv.textContent=`💰 ${coins}`;
+}
+
+function createDroplets(plot){
+  for(let i=0;i<5;i++){
+    let d=document.createElement('div');
+    d.className='droplet';
+    let size = Math.random()*5 + 3;
+    d.style.width=d.style.height=size+'px';
+    d.style.left=Math.random()*(80-size)+'px';
+    d.style.top=Math.random()*(80-size)+'px';
+    plot.appendChild(d);
+    setTimeout(()=>plot.removeChild(d),2000);
+  }
+}
+
+function onTileClick(i,plot){
+  let p=grid[i];
+  if(tool==='plant'){ 
+    if(!p.crop){ p.crop=seed; p.growth=0; p.mutations=[]; let rand=Math.random(); if(rand<0.1) p.mutations.push('frozen'); else if(rand<0.2) p.mutations.push('wet'); }
+  } else if(tool==='water'){ 
+    if(p.crop){ p.growth+=15; createDroplets(plot); if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet'); }
+  } else if(tool==='shovel'){ grid[i]={crop:null,growth:0,mutations:[], wetDrops:[]}; }
+  if(p.crop && p.growth>=100){
+    let sellPrice = CROPS[p.crop].baseSell;
+    let multiplier = 1;
+    if(p.mutations.includes('wet')) multiplier *= 2;
+    if(p.mutations.includes('frozen')) multiplier *= 10;
+    sellPrice *= multiplier;
+    coins+=sellPrice;
+    if(CROPS[p.crop].regrow){ p.growth=0; p.mutations=[]; } else { grid[i]={crop:null,growth:0,mutations:[], wetDrops:[]}; }
+  }
+  render();
+}
+
+setInterval(()=>{
+  grid.forEach(p=>{ if(p.crop && p.growth<100)p.growth+=100/CROPS[p.crop].growTime/10; p.growth=Math.min(p.growth,100); });
+  render();
+},1000);
+
+render();
+</script>
+</body>
+</html>
