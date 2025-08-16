@@ -365,6 +365,10 @@ function onTileClick(i,plot){
         if(!p.crop && inventory['seeds'][seed]>0){
             p.crop=seed; p.growth=0; p.mutations=[];
             inventory['seeds'][seed]--;
+            // clear hotbar if no more seeds
+            hotbar.forEach((h,i2)=>{
+                if(h===seed && inventory['seeds'][seed]===0) hotbar[i2]=null;
+            });
         }
     } else if(tool==='water'){
         if(p.crop && inventory['gear']['water']>0){
@@ -372,6 +376,10 @@ function onTileClick(i,plot){
             createDroplets(plot);
             if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet');
             inventory['gear']['water']--;
+            // clear hotbar if water ran out
+            hotbar.forEach((h,i2)=>{
+                if(h==='water' && inventory['gear']['water']===0) hotbar[i2]=null;
+            });
         }
     } else if(tool==='shovel'){
         grid[i]={crop:null,growth:0,mutations:[],wetDrops:[]};
