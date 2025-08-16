@@ -118,6 +118,45 @@ const shopContent=document.getElementById('shopContent');
 const coinsDiv=document.getElementById('coins');
 const plotCostSpan = document.getElementById('plotCost');
 
+  // --- AUTO-SAVE & LOAD ---
+function saveGame() {
+    const gameState = {
+        coins: coins,
+        grid: grid.map(p => ({
+            crop: p.crop,
+            growth: p.growth,
+            mutations: p.mutations
+        })),
+        nextPlotCost: nextPlotCost,
+        seed: seed,
+        tool: tool
+    };
+    localStorage.setItem('gardenGameSave', JSON.stringify(gameState));
+}
+
+function loadGame() {
+    const saved = localStorage.getItem('gardenGameSave');
+    if (saved) {
+        const gameState = JSON.parse(saved);
+        coins = gameState.coins;
+        nextPlotCost = gameState.nextPlotCost;
+        seed = gameState.seed;
+        tool = gameState.tool;
+        grid.forEach((p, i) => {
+            if (gameState.grid[i]) {
+                p.crop = gameState.grid[i].crop;
+                p.growth = gameState.grid[i].growth;
+                p.mutations = gameState.grid[i].mutations;
+                p.wetDrops = [];
+            }
+        });
+    }
+}
+
+loadGame();
+setInterval(saveGame, 5000);
+// --- END AUTO-SAVE & LOAD ---
+
 function toggleShop(){ shopContent.style.display = shopContent.style.display==='none' ? 'block' : 'none'; }
 function buySeed(crop){ if(coins>=CROPS[crop].seedCost){ coins-=CROPS[crop].seedCost; seed=crop; tool='plant'; render(); } }
 function buyWater(){ if(coins>=10){ tool='water'; coins-=10; render(); } }
