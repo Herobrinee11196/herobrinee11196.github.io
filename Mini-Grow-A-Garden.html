@@ -114,6 +114,7 @@
 <div class="toolbar">
   <button onclick="toggleSeeds()">🌱 Seeds</button>
   <button onclick="toggleGear()">⚙️ Gear</button>
+  <button onclick="toggleBag()">🎒 Inventory</button>
   <button onclick="buyPlot()">➕ Add Plot (<span id='plotCost'>2</span>💰)</button>
 </div>
 <div id="shopContent"></div>
@@ -135,7 +136,7 @@ const CROPS = {
   tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true }
 };
 let grid = [];
-let inventory = {seeds:{}, gear:{}};
+let inventory = {seeds:{}, gear:{shovel:1}};
 let hotbar = [null,null,null];
 let selectedHotbar = 0;
 
@@ -167,10 +168,10 @@ function loadProgress() {
     if(!saveData) return;
     coins = saveData.coins || 20;
     nextPlotCost = saveData.nextPlotPrice || 2;
-    inventory = saveData.inventory || {seeds:{}, gear:{}};
+    inventory = saveData.inventory || {seeds:{}, gear:{shovel:1}};
     hotbar = saveData.hotbar || [null,null,null];
     selectedHotbar = saveData.selectedHotbar || 0;
-    grid = saveData.plots.map(p=>({crop:p.crop,growth:p.growth,mutations:p.mutations||[],wetDrops:[]}));
+    grid = saveData.plots.map(p=>({crop:p.crop,growth:p.growth,mutations:p.mutations||[],wetDrops:[]}));  
     render();
     renderBag();
     renderHotbar();
@@ -197,6 +198,31 @@ function toggleGear(){
     b.textContent='💧 Water x10 (50000💰)';
     b.onclick=()=>buyWater();
     shopContent.appendChild(b);
+}
+
+// --- BAG ---
+function toggleBag(){
+    bagContent.style.display = bagContent.style.display==='none'?'flex':'none';
+    renderBag();
+}
+
+function renderBag(){
+    bagContent.innerHTML='';
+    ['seeds','gear'].forEach(type=>{
+        for(let item in inventory[type]){
+            if(inventory[type][item]>0){
+                let b=document.createElement('button');
+                let label = type==='gear'? `${item==='shovel'?'🪓 Shovel':'💧 Water x'+inventory[type][item]}` : `${CROPS[item].emoji} ${item} x${inventory[type][item]}`;
+                b.textContent=label;
+                b.onclick=()=>{ 
+                    if(type==='gear'){ tool=item==='shovel'?'shovel':'water'; seed=null; }
+                    else { seed=item; tool='plant'; }
+                    renderHotbar();
+                };
+                bagContent.appendChild(b);
+            }
+        }
+    });
 }
 
 // --- BUY FUNCTIONS ---
@@ -230,33 +256,19 @@ function buyPlot(){
     }
 }
 
-// --- BAG ---
-function renderBag(){
-    bagContent.innerHTML='';
-    for(let type in inventory){
-        for(let item in inventory[type]){
-            if(inventory[type][item]>0){
-                let b=document.createElement('button');
-                let label = type==='gear'? `💧 Water x${inventory[type][item]}` : `${CROPS[item].emoji} ${item} x${inventory[type][item]}`;
-                b.textContent=label;
-                b.onclick=()=>{
-                    if(type==='gear'){ tool='water'; seed=null; }
-                    else { seed=item; tool='plant'; }
-                };
-                bagContent.appendChild(b);
-            }
-        }
-    }
-}
-
 // --- HOTBAR ---
 function renderHotbar(){
     hotbarDiv.innerHTML='';
     hotbar.forEach((item,i)=>{
         let slot=document.createElement('div');
         slot.className='hotbar-slot'+(i===selectedHotbar?' selected':'');
-        slot.textContent = item ? (item==='water'?'💧':CROPS[item].emoji) : '';
-        slot.onclick=()=>{selectedHotbar=i; tool=item==='water'?'water':'plant'; seed=item!=='water'?item:null; renderHotbar();}
+        slot.textContent = item ? (item==='water'?'💧':CROPS[item]?.emoji||'🪓') : '';
+        slot.onclick=()=>{
+            selectedHotbar=i;
+            tool=item==='water'?'water':item==='shovel'?'shovel':'plant';
+            seed=item && item!=='water' && item!=='shovel'?item:null;
+            renderHotbar();
+        }
         hotbarDiv.appendChild(slot);
     });
 }
@@ -350,6 +362,45 @@ setInterval(()=>{
 },1000);
 
 render();
+
+// --- HOTBAR DRAG & DROP ---
+function enableHotbarDrag(){
+    hotbarDiv.querySelectorAll('.hotbar-slot').forEach((slot,i)=>{
+        slot.draggable = true;
+        slot.ondragstart = e=>{
+            e.dataTransfer.setData('text/plain', i); // index of dragged slot
+        };
+        slot.ondragover = e=>{
+            e.preventDefault();
+        };
+        slot.ondrop = e=>{
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const temp = hotbar[fromIndex];
+            hotbar[fromIndex] = hotbar[i];
+            hotbar[i] = temp;
+            renderHotbar();
+        };
+    });
+}
+
+// update renderHotbar to call enableHotbarDrag at the end
+function renderHotbar(){
+    hotbarDiv.innerHTML='';
+    hotbar.forEach((item,i)=>{
+        let slot=document.createElement('div');
+        slot.className='hotbar-slot'+(i===selectedHotbar?' selected':'');
+        slot.textContent = item ? (item==='water'?'💧':CROPS[item]?.emoji||'🪓') : '';
+        slot.onclick=()=>{
+            selectedHotbar=i;
+            tool=item==='water'?'water':item==='shovel'?'shovel':'plant';
+            seed=item && item!=='water' && item!=='shovel'?item:null;
+            renderHotbar();
+        }
+        hotbarDiv.appendChild(slot);
+    });
+    enableHotbarDrag();
+}
 </script>
 </body>
 </html>
