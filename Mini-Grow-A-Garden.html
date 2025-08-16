@@ -100,151 +100,156 @@
 <div id="field"></div>
 <div id="coins">💰 20</div>
 <script>
-let gridSize = 2;
-let nextPlotCost = 2;
-const priceMultiplier = 1.2;
+let tool='plant';
+let seed='carrot';
+let coins=20;
+let nextPlotCost=2;
+const priceMultiplier=1.2;
 const CROPS = {
   carrot: { emoji: '🥕', growTime: 5, baseSell: 18, seedCost: 10, regrow:false },
   strawberry: { emoji: '🍓', growTime: 5, baseSell: 14, seedCost: 50, regrow:false },
   blueberry: { emoji: '🫐', growTime: 6, baseSell: 18, seedCost: 400, regrow:true },
   tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true }
 };
-let grid = Array(gridSize*gridSize).fill().map(()=>({crop:null, growth:0, mutations:[], wetDrops:[]}));
-let tool='plant';
-let seed='carrot';
-let coins=20;
+let grid = [];
 const field=document.getElementById('field');
 const shopContent=document.getElementById('shopContent');
 const coinsDiv=document.getElementById('coins');
-const plotCostSpan = document.getElementById('plotCost');
+const plotCostSpan=document.getElementById('plotCost');
 
-  // --- AUTO-SAVE & LOAD ---
-function saveGame() {
-    const gameState = {
+// --- INITIAL PLOTS ---
+for(let i=0;i<4;i++) grid.push({crop:null,growth:0,mutations:[],wetDrops:[]});
+
+// --- SAVE / LOAD ---
+function saveProgress() {
+    const saveData = {
         coins: coins,
-        grid: grid.map(p => ({
-            crop: p.crop,
-            growth: p.growth,
-            mutations: p.mutations
+        plots: grid.map(plot => ({
+            crop: plot.crop,
+            growth: plot.growth,
+            mutations: plot.mutations,
+            wetDrops: [] // optional, not saving DOM elements
         })),
-        nextPlotCost: nextPlotCost,
+        nextPlotPrice: nextPlotCost,
         seed: seed,
         tool: tool
     };
-    localStorage.setItem('gardenGameSave', JSON.stringify(gameState));
+    localStorage.setItem('farmSave', JSON.stringify(saveData));
 }
 
-function loadGame() {
-    const saved = localStorage.getItem('gardenGameSave');
-    if (saved) {
-        const gameState = JSON.parse(saved);
-        coins = gameState.coins;
-        nextPlotCost = gameState.nextPlotCost;
-        seed = gameState.seed;
-        tool = gameState.tool;
-        grid.forEach((p, i) => {
-            if (gameState.grid[i]) {
-                p.crop = gameState.grid[i].crop;
-                p.growth = gameState.grid[i].growth;
-                p.mutations = gameState.grid[i].mutations;
-                p.wetDrops = [];
-            }
-        });
-    }
-    render(); // <-- ensures the UI updates after loading
+function loadProgress() {
+    const saveData = JSON.parse(localStorage.getItem('farmSave'));
+    if(!saveData) return;
+
+    coins = saveData.coins || 20;
+    nextPlotCost = saveData.nextPlotPrice || 2;
+    seed = saveData.seed || 'carrot';
+    tool = saveData.tool || 'plant';
+
+    grid = saveData.plots.map(p => ({
+        crop: p.crop,
+        growth: p.growth,
+        mutations: p.mutations || [],
+        wetDrops: []
+    }));
+
+    render();
 }
 
-loadGame();
-setInterval(saveGame, 5000);
-// --- END AUTO-SAVE & LOAD ---
+// auto-save every 5 sec
+setInterval(saveProgress,5000);
+loadProgress();
 
-function toggleShop(){ shopContent.style.display = shopContent.style.display==='none' ? 'block' : 'none'; }
+// --- SHOP & TOOL FUNCTIONS ---
+function toggleShop(){ shopContent.style.display = shopContent.style.display==='none'?'block':'none'; }
 function buySeed(crop){ if(coins>=CROPS[crop].seedCost){ coins-=CROPS[crop].seedCost; seed=crop; tool='plant'; render(); } }
 function buyWater(){ if(coins>=10){ tool='water'; coins-=10; render(); } }
 function buyPlot(){
-  if(coins>=nextPlotCost){
-    coins -= nextPlotCost;
-    grid.push({crop:null, growth:0, mutations:[], wetDrops:[]});
-    nextPlotCost = Math.ceil(nextPlotCost * priceMultiplier);
-    plotCostSpan.textContent = nextPlotCost;
-    render();
-  }
+    if(coins>=nextPlotCost){
+        coins-=nextPlotCost;
+        grid.push({crop:null,growth:0,mutations:[],wetDrops:[]});
+        nextPlotCost = Math.ceil(nextPlotCost * priceMultiplier);
+        plotCostSpan.textContent = nextPlotCost;
+        render();
+    }
 }
 
-let sortedCrops = Object.keys(CROPS).sort((a,b)=>CROPS[a].seedCost - CROPS[b].seedCost);
-sortedCrops.forEach(k => {
-  let b=document.createElement('button');
-  b.textContent=CROPS[k].emoji+' '+k+' ('+CROPS[k].seedCost+'💰)';
-  b.onclick=()=>buySeed(k);
-  shopContent.appendChild(b);
+// sorted shop
+Object.keys(CROPS).sort((a,b)=>CROPS[a].seedCost-CROPS[b].seedCost).forEach(k=>{
+    let b=document.createElement('button');
+    b.textContent=CROPS[k].emoji+' '+k+' ('+CROPS[k].seedCost+'💰)';
+    b.onclick=()=>buySeed(k);
+    shopContent.appendChild(b);
 });
 
+// --- RENDER & INTERACTIONS ---
 function render(){
-  field.innerHTML='';
-  let cols = Math.ceil(Math.sqrt(grid.length));
-  field.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
-  grid.forEach((p,i)=>{
-    let b=document.createElement('div');
-    b.className='plot';
-    if(p.crop){
-      let g=document.createElement('div');
-      g.className='growth';
-      g.textContent=Math.floor(p.growth)+'%' + (p.mutations.length ? ' ('+p.mutations.join(',')+')' : '');
-      b.appendChild(g);
-      let c=document.createElement('span');
-      c.textContent=CROPS[p.crop].emoji;
-      if(p.mutations.includes('frozen')) c.classList.add('frozen');
-      b.appendChild(c);
-      if(p.mutations.includes('wet') && p.wetDrops.length===0){
-        let drop = document.createElement('div');
-        drop.className='wet-drop';
-        drop.style.left=Math.random()*70+'px';
-        drop.style.top=Math.random()*70+'px';
-        b.appendChild(drop);
-        p.wetDrops.push(drop);
-      }
-    }
-    b.onclick=()=>onTileClick(i,b);
-    field.appendChild(b);
-  });
-  coinsDiv.textContent=`💰 ${coins}`;
+    field.innerHTML='';
+    let cols = Math.ceil(Math.sqrt(grid.length));
+    field.style.gridTemplateColumns = `repeat(${cols}, 80px)`;
+    grid.forEach((p,i)=>{
+        let b=document.createElement('div');
+        b.className='plot';
+        if(p.crop){
+            let g=document.createElement('div');
+            g.className='growth';
+            g.textContent=Math.floor(p.growth)+'%' + (p.mutations.length ? ' ('+p.mutations.join(',')+')' : '');
+            b.appendChild(g);
+            let c=document.createElement('span');
+            c.textContent=CROPS[p.crop].emoji;
+            if(p.mutations.includes('frozen')) c.classList.add('frozen');
+            b.appendChild(c);
+            if(p.mutations.includes('wet') && p.wetDrops.length===0){
+                let drop=document.createElement('div');
+                drop.className='wet-drop';
+                drop.style.left=Math.random()*70+'px';
+                drop.style.top=Math.random()*70+'px';
+                b.appendChild(drop);
+                p.wetDrops.push(drop);
+            }
+        }
+        b.onclick=()=>onTileClick(i,b);
+        field.appendChild(b);
+    });
+    coinsDiv.textContent=`💰 ${coins}`;
 }
 
 function createDroplets(plot){
-  for(let i=0;i<5;i++){
-    let d=document.createElement('div');
-    d.className='droplet';
-    let size = Math.random()*5 + 3;
-    d.style.width=d.style.height=size+'px';
-    d.style.left=Math.random()*(80-size)+'px';
-    d.style.top=Math.random()*(80-size)+'px';
-    plot.appendChild(d);
-    setTimeout(()=>plot.removeChild(d),2000);
-  }
+    for(let i=0;i<5;i++){
+        let d=document.createElement('div');
+        d.className='droplet';
+        let size=Math.random()*5+3;
+        d.style.width=d.style.height=size+'px';
+        d.style.left=Math.random()*(80-size)+'px';
+        d.style.top=Math.random()*(80-size)+'px';
+        plot.appendChild(d);
+        setTimeout(()=>plot.removeChild(d),2000);
+    }
 }
 
 function onTileClick(i,plot){
-  let p=grid[i];
-  if(tool==='plant'){ 
-    if(!p.crop){ p.crop=seed; p.growth=0; p.mutations=[]; let rand=Math.random(); if(rand<0.1) p.mutations.push('frozen'); else if(rand<0.2) p.mutations.push('wet'); }
-  } else if(tool==='water'){ 
-    if(p.crop){ p.growth+=15; createDroplets(plot); if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet'); }
-  } else if(tool==='shovel'){ grid[i]={crop:null,growth:0,mutations:[], wetDrops:[]}; }
-  if(p.crop && p.growth>=100){
-    let sellPrice = CROPS[p.crop].baseSell;
-    let multiplier = 1;
-    if(p.mutations.includes('wet')) multiplier *= 2;
-    if(p.mutations.includes('frozen')) multiplier *= 10;
-    sellPrice *= multiplier;
-    coins+=sellPrice;
-    if(CROPS[p.crop].regrow){ p.growth=0; p.mutations=[]; } else { grid[i]={crop:null,growth:0,mutations:[], wetDrops:[]}; }
-  }
-  render();
+    let p=grid[i];
+    if(tool==='plant'){
+        if(!p.crop){ p.crop=seed; p.growth=0; p.mutations=[]; let r=Math.random(); if(r<0.1)p.mutations.push('frozen'); else if(r<0.2)p.mutations.push('wet'); }
+    } else if(tool==='water'){
+        if(p.crop){ p.growth+=15; createDroplets(plot); if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet'); }
+    } else if(tool==='shovel'){ grid[i]={crop:null,growth:0,mutations:[],wetDrops:[]}; }
+
+    if(p.crop && p.growth>=100){
+        let sellPrice = CROPS[p.crop].baseSell;
+        let multiplier=1;
+        if(p.mutations.includes('wet')) multiplier*=2;
+        if(p.mutations.includes('frozen')) multiplier*=10;
+        coins+=sellPrice*multiplier;
+        if(CROPS[p.crop].regrow){ p.growth=0; p.mutations=[]; } else { grid[i]={crop:null,growth:0,mutations:[],wetDrops:[]}; }
+    }
+    render();
 }
 
+// passive growth
 setInterval(()=>{
-  grid.forEach(p=>{ if(p.crop && p.growth<100)p.growth+=100/CROPS[p.crop].growTime/10; p.growth=Math.min(p.growth,100); });
-  render();
+    grid.forEach(p=>{ if(p.crop && p.growth<100) p.growth+=100/CROPS[p.crop].growTime/10; p.growth=Math.min(p.growth,100); });
+    render();
 },1000);
 
 render();
