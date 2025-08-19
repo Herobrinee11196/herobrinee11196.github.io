@@ -103,9 +103,20 @@
     justify-content: center;
     cursor: pointer;
     transition: box-shadow 0.2s;
+    position: relative;
+    font-size: 28px;
   }
   .hotbar-slot.selected {
     box-shadow: 0 0 10px 3px #00ffff;
+  }
+  .hotbar-count {
+    position: absolute;
+    bottom: 2px;
+    right: 5px;
+    font-size: 14px;
+    background: rgba(0,0,0,0.6);
+    padding: 1px 3px;
+    border-radius: 5px;
   }
 </style>
 </head>
@@ -130,10 +141,10 @@ let coins=20;
 let nextPlotCost=2;
 const priceMultiplier=1.2;
 const CROPS = {
-  carrot: { emoji: '🥕', growTime: 5, baseSell: 18, seedCost: 10, regrow:false },
-  strawberry: { emoji: '🍓', growTime: 5, baseSell: 14, seedCost: 50, regrow:false },
-  blueberry: { emoji: '🫐', growTime: 6, baseSell: 18, seedCost: 400, regrow:true },
-  tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true }
+  carrot: { emoji: '🥕', growTime: 5, baseSell: 18, seedCost: 10, regrow:false, yield:1 },
+  strawberry: { emoji: '🍓', growTime: 5, baseSell: 14, seedCost: 50, regrow:true, yield:4 },
+  blueberry: { emoji: '🫐', growTime: 6, baseSell: 18, seedCost: 400, regrow:true, yield:10 },
+  tomato: { emoji: '🍅', growTime: 7, baseSell: 27, seedCost: 800, regrow:true, yield:6 }
 };
 let grid = [];
 let inventory = {seeds:{}, gear:{shovel:1}};
@@ -177,7 +188,6 @@ function loadProgress() {
     renderHotbar();
 }
 
-setInterval(saveProgress,5000);
 loadProgress();
 
 // --- SHOP TOGGLES ---
@@ -220,7 +230,12 @@ function renderBag(){
                 b.onclick=()=>{ 
                     if(type==='gear'){ tool=item==='shovel'?'shovel':'water'; seed=null; }
                     else { seed=item; tool='plant'; }
+                    if(!hotbar.includes(item)){
+                        let emptyIndex = hotbar.indexOf(null);
+                        if(emptyIndex!==-1) hotbar[emptyIndex]=item;
+                    }
                     renderHotbar();
+                    saveProgress();
                 };
                 bagContent.appendChild(b);
             }
@@ -233,6 +248,7 @@ function addToInventory(type,item){
     if(!inventory[type][item]) inventory[type][item]=0;
     inventory[type][item]++;
     renderBag();
+    saveProgress();
 }
 
 function buySeed(crop){
@@ -240,6 +256,7 @@ function buySeed(crop){
         coins-=CROPS[crop].seedCost;
         addToInventory('seeds',crop);
         render();
+        saveProgress();
     }
 }
 function buyWater(){
@@ -247,6 +264,7 @@ function buyWater(){
         coins-=50000;
         addToInventory('gear','water');
         render();
+        saveProgress();
     }
 }
 function buyPlot(){
@@ -256,6 +274,7 @@ function buyPlot(){
         nextPlotCost = Math.ceil(nextPlotCost*priceMultiplier);
         plotCostSpan.textContent = nextPlotCost;
         render();
+        saveProgress();
     }
 }
 
@@ -265,41 +284,45 @@ function renderHotbar(){
     hotbar.forEach((item,i)=>{
         let slot=document.createElement('div');
         slot.className='hotbar-slot'+(i===selectedHotbar?' selected':'');
-        slot.textContent = item ? (item==='water'?'💧':CROPS[item]?.emoji||'🪓') : '';
-        slot.onclick=()=>{
-            selectedHotbar=i;
-            let selectedItem = hotbar[i];
-            tool=selectedItem==='water'?'water':selectedItem==='shovel'?'shovel':'plant';
-            seed=selectedItem && selectedItem!=='water' && selectedItem!=='shovel'?selectedItem:null;
-            renderHotbar();
-        }
-
-        // Drag & Drop hotbar slots
-        slot.draggable=true;
-        slot.ondragstart=e=>{
-            e.dataTransfer.setData('text/plain', i);
-        };
-        slot.ondragover=e=>{
-            e.preventDefault();
-        };
-        slot.ondrop=e=>{
-            e.preventDefault();
-            const fromIndex=parseInt(e.dataTransfer.getData('text/plain'));
-            // Swap slots
-            [hotbar[fromIndex],hotbar[i]]=[hotbar[i],hotbar[fromIndex]];
-            renderHotbar();
-        };
-
-        // Accept drag from bag
-        slot.addEventListener('dragover', e=>e.preventDefault());
-        slot.addEventListener('drop', e=>{
-            e.preventDefault();
-            const itemId = e.dataTransfer.getData('text/plain');
-            if(itemId){
-                hotbar[i]=itemId;
-                renderHotbar();
+        if(item){
+            slot.textContent = item==='water'?'💧':CROPS[item]?.emoji||'🪓';
+            let count = inventory.seeds[item] || inventory.gear[item] || 0;
+            if(count>1){
+                let c=document.createElement('div');
+                c.className='hotbar-count';
+                c.textContent='x'+count;
+                slot.appendChild(c);
             }
-        });
+        }
+        slot.onclick=()=>{
+            if(hotbar[i]){
+                // if clicked again, remove item from hotbar
+                if(i===selectedHotbar){
+                    hotbar[i] = null;
+                    tool='plant';
+                    seed=null;
+                } else {
+                    selectedHotbar=i;
+                    let selectedItem = hotbar[i];
+                    tool=selectedItem==='water'?'water':selectedItem==='shovel'?'shovel':'plant';
+                    seed=selectedItem && selectedItem!=='water' && selectedItem!=='shovel'?selectedItem:null;
+                }
+                renderHotbar();
+                saveProgress();
+            }
+        }
+        
+        // Allow dropping items into hotbar slots
+        slot.ondragover = e => e.preventDefault();
+        slot.ondrop = e => {
+            e.preventDefault();
+            let draggedItem = e.dataTransfer.getData('text/plain');
+            if(!hotbar.includes(draggedItem)){
+                hotbar[i] = draggedItem;
+                renderHotbar();
+                saveProgress();
+            }
+        };
 
         hotbarDiv.appendChild(slot);
     });
@@ -344,6 +367,7 @@ function render(){
     });
     coinsDiv.textContent=`💰 ${coins}`;
     renderHotbar();
+    plotCostSpan.textContent = nextPlotCost;
 }
 
 function createDroplets(plot){
@@ -365,7 +389,6 @@ function onTileClick(i,plot){
         if(!p.crop && inventory['seeds'][seed]>0){
             p.crop=seed; p.growth=0; p.mutations=[];
             inventory['seeds'][seed]--;
-            // clear hotbar if no more seeds
             hotbar.forEach((h,i2)=>{
                 if(h===seed && inventory['seeds'][seed]===0) hotbar[i2]=null;
             });
@@ -376,7 +399,6 @@ function onTileClick(i,plot){
             createDroplets(plot);
             if(Math.random()<0.2 && !p.mutations.includes('wet')) p.mutations.push('wet');
             inventory['gear']['water']--;
-            // clear hotbar if water ran out
             hotbar.forEach((h,i2)=>{
                 if(h==='water' && inventory['gear']['water']===0) hotbar[i2]=null;
             });
@@ -390,12 +412,13 @@ function onTileClick(i,plot){
         let multiplier=1;
         if(p.mutations.includes('wet')) multiplier*=2;
         if(p.mutations.includes('frozen')) multiplier*=10;
-        coins+=sellPrice*multiplier;
+        coins+=sellPrice*multiplier*CROPS[p.crop].yield;
         if(CROPS[p.crop].regrow){ p.growth=0; p.mutations=[]; }
         else { grid[i]={crop:null,growth:0,mutations:[],wetDrops:[]}; }
     }
     render();
     renderBag();
+    saveProgress();
 }
 
 // passive growth
@@ -407,6 +430,7 @@ setInterval(()=>{
         }
     });
     render();
+    saveProgress();
 },1000);
 
 render();
