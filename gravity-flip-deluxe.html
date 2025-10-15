@@ -10,13 +10,23 @@
     --ui:#13263f; --glass:rgba(255,255,255,0.04);
   }
   html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:#d7eefc;background:var(--bg)}
-  #container{max-width:1050px;margin:14px auto;padding:12px;}
+#container {
+  max-width: 1050px;
+  margin: 14px auto; /* auto left/right centers it */
+  padding: 12px;
+}
   #topbar{display:flex;gap:12px;align-items:center;padding:10px;border-radius:12px;background:linear-gradient(180deg,var(--panel),#072035);box-shadow:0 6px 30px rgba(0,0,0,.7)}
   #hud-left{display:flex;gap:12px;align-items:center;}
   .pill{background:var(--ui);padding:8px 12px;border-radius:10px;display:flex;gap:8px;align-items:center}
   #coins {font-weight:700;color:gold}
   button{background:var(--accent);border:0;padding:8px 12px;border-radius:10px;color:#032;padding-left:14px;padding-right:14px;cursor:pointer;font-weight:700}
-  #gamewrap{display:flex;gap:12px;margin-top:12px}
+  #gamewrap {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: center; /* centers the canvas & sidebar horizontally */
+  align-items: flex-start; /* keeps them aligned at the top */
+}
   canvas{background:#07182b;border-radius:10px;display:block;box-shadow:0 10px 40px rgba(0,0,0,.6)}
   #sidebar{width:320px;background:linear-gradient(180deg,#07293f,#041425);border-radius:12px;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
   h3{margin:6px 0 8px 0}
@@ -390,7 +400,7 @@ window.addEventListener('keyup', e=>{
   if(e.key==='ArrowLeft') keys.left=false;
   if(e.key==='ArrowRight') keys.right=false;
 });
-canvas.addEventListener('dblclick', ()=> nextLevel()); // debug skip
+//canvas.addEventListener('dblclick', ()=> nextLevel()); // debug skip
 
 document.getElementById('reset').addEventListener('click', resetLevel);
 document.getElementById('shopOpen').addEventListener('click', ()=>{ openShop() });
