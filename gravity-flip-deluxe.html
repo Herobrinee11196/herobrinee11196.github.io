@@ -49,8 +49,7 @@
       <div class="pill muted">Double jump: <span id="djState">No</span></div>
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;">
-      <!-- put this somewhere in your HTML, like below your canvas -->
-<button id="fullscreenBtn" style="position:absolute; bottom:10px; right:10px; z-index:1000;">Fullscreen</button>
+      
       <button id="shopOpen">Shop</button>
       <button id="reset">Reset</button>
       <button id="clearSave" class="ghost">Clear Save</button>
@@ -243,19 +242,6 @@ const upgradeDefs = [
   {id:'extrahp', name:'Extra Life', price:350, desc:'Start each run with 1 extra life', apply: s=> s.extraLives = (s.extraLives||0)+1, single:false},
   {id:'slowgrav', name:'Slow Gravity Mode', price:450, desc:'gravity acceleration -40%', apply: s=> s.gravity *= 0.6, single:true}
 ];
-
-// put this in your main JS file, after your canvas is created
-const fullscreenBtn = document.getElementById("fullscreenBtn");
-
-fullscreenBtn.addEventListener("click", () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-    } else {
-        document.exitFullscreen();
-    }
-});
   
 // skins (super crazy — color + tiny style)
 const skins = [
@@ -727,6 +713,27 @@ document.getElementById('toggleMusic').addEventListener('change', (e)=>{
 
 // small autosave interval
 setInterval(()=>saveNow(), 5000);
+
+(function() {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return console.log("No canvas found!");
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+    }
+
+    // Run it once
+    resizeCanvas();
+
+    // Update on window resize
+    window.addEventListener('resize', resizeCanvas);
+
+    console.log("Canvas is now fullscreen-ish!");
+})();
+
 </script>
 </body>
 </html>
