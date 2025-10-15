@@ -49,6 +49,8 @@
       <div class="pill muted">Double jump: <span id="djState">No</span></div>
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;">
+      <!-- put this somewhere in your HTML, like below your canvas -->
+<button id="fullscreenBtn" style="position:absolute; bottom:10px; right:10px; z-index:1000;">Fullscreen</button>
       <button id="shopOpen">Shop</button>
       <button id="reset">Reset</button>
       <button id="clearSave" class="ghost">Clear Save</button>
@@ -242,6 +244,19 @@ const upgradeDefs = [
   {id:'slowgrav', name:'Slow Gravity Mode', price:450, desc:'gravity acceleration -40%', apply: s=> s.gravity *= 0.6, single:true}
 ];
 
+// put this in your main JS file, after your canvas is created
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+fullscreenBtn.addEventListener("click", () => {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+});
+  
 // skins (super crazy — color + tiny style)
 const skins = [
   {id:'default', name:'Default', price:0, desc:'OG pale blob', draw: (ctx, x,y,w,h,grav)=> {
