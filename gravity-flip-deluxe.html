@@ -417,6 +417,12 @@ function update(){
   else if(keys.right) player.vx = stats.moveSpeed;
   else player.vx = 0;
 
+// Clamp player horizontally inside screen
+player.x = Math.max(player.w/2, Math.min(W - player.w/2, player.x));
+
+// Clamp player vertically to not go above top
+player.y = Math.max(player.h/2, Math.min(H - player.h/2 + 50, player.y));
+  
   // jetpack active: if owned & holding space (gravity flipped recently) give small thrust
   if(save.owned.jetpack && save.settings.sound && holdingSpace()){} // sound handled during space press
 
@@ -532,7 +538,8 @@ function collides(px,py){
 
 // ===== DRAW =====
 function draw(){
-  ctx.clearRect(0,0,W,H);
+  // Clear entire canvas each frame
+ctx.clearRect(0, 0, canvas.width, canvas.height);
   // background gradient
   const g = ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0,'#07182b'); g.addColorStop(1,'#042034');
@@ -731,19 +738,20 @@ setInterval(()=>saveNow(), 5000);
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
     }
 
-    // Run it once
+    // Run it once immediately
     resizeCanvas();
 
     // Update on window resize
     window.addEventListener('resize', resizeCanvas);
 
-    console.log("Canvas is now fullscreen-ish!");
+    console.log("Canvas is now fullscreen!");
 })();
 
+  W = canvas.width;
+H = canvas.height;
+  
 </script>
 </body>
 </html>
