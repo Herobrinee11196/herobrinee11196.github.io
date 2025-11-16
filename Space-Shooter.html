@@ -140,25 +140,26 @@
       };
 
       const bullets = [];
-      const enemies = [];
-      let keys = {};
-      let totalKills = 0;
-      let superKillCounter = 0;
-      let canUseSuper = false;
-      let superBeamActive = false;
-      let superBeamTimer = 0;
+const enemies = [];
+let keys = {};
+let totalKills = 0;
+let superKillCounter = 0;
+let canUseSuper = false;
+let superBeamActive = false;
+let superBeamTimer = 0;
 
-      let lives = 3;
-      let gameOver = false;
-      let score = 0;
-      let lastFireTime = 0;
-      const fireCooldown = 200;
+// Player stats
+let lives = 3;
+let maxLives = 3;             // tracks the maximum lives the player can have
+let gameOver = false;
+let score = 0;
+let lastFireTime = 0;
+const fireCooldown = 200;
 
-      // Cheat states
-  let maxLives = 3;  
-  let zeroBulletCooldown = false;   // zbfc01
-  let infiniteSuperBeam = false;    // isb02
-  let invincibleMode = false;        // ib04
+// Cheat states
+let zeroBulletCooldown = false;  // zbfc01
+let infiniteSuperBeam = false;   // isb02
+let invincibleMode = false;      // ib04
 
       document.addEventListener("keydown", (e) => {
   // ✨ Open code box with T, but don’t type the T inside it
@@ -175,14 +176,6 @@
 
   // 🎮 Game controls
   keys[e.code] = true;
-
-  if (e.code === "ArrowDown" && canUseSuper && !superBeamActive && !gameOver) {
-    superBeamActive = true;
-    superBeamTimer = 5000;
-    canUseSuper = false;
-    superKillCounter -= 30;
-    if (superKillCounter < 0) superKillCounter = 0;
-  }
 });
 
       document.addEventListener("keyup", (e) => {
@@ -202,13 +195,17 @@ if (cheat === "tori" || cheat === "default" || cheat === "gio") {
   setShipSprites(currentShip);
 }
 
-// Cheat codes
-if (cheat === "zbfc01") zeroBulletCooldown = true;
-if (cheat === "isb02") infiniteSuperBeam = true;
-if (cheat === "tl03") lives += 10;
-if (cheat === "ib04") invincibleMode = true;
-if (cheat === "hpb05") lives = 3;  // full heal (adjust max as needed)
-
+// Cheats
+if (code === "zbfc01") zeroBulletCooldown = true;
+if (code === "isb02") infiniteSuperBeam = true;
+if (code === "tl03") {
+  maxLives = Math.min(10, lives + 10); // cap at 10
+  lives = maxLives;                     // heal up to new max
+}
+if (code === "ib04") invincibleMode = true;
+if (code === "hpb05") {
+  lives = maxLives;                     // heal to max
+}
 
     codeBox.value = "";
     codeBox.style.display = "none";
@@ -269,26 +266,7 @@ if (keys["ArrowUp"]) {
     lastFireTime = performance.now();
   }
 }
-
-        if (superBeamActive || infiniteSuperBeam) {
-  if (!superBeamActive) superBeamTimer = 5000; // for normal beam timing
-  superBeamActive = true;
-  enemies.forEach((enemy, i) => {
-    const beamWidth = 10;
-    if (enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
-        enemy.x <= player.x + player.width / 2 + beamWidth / 2) {
-      enemies.splice(i, 1);
-      enemyDestroyed(true);
-    }
-  });
-
-  if (!infiniteSuperBeam) {
-    superBeamTimer -= deltaTime;
-    if (superBeamTimer <= 0) superBeamActive = false;
-  }
-}
-
-        
+     
         // Move player
         if (keys["ArrowLeft"]) {
           player.x -= player.speed;
@@ -321,6 +299,29 @@ if (keys["ArrowUp"]) {
           if (bullets[i].y < 0) bullets.splice(i, 1);
         }
 
+    // Move player left/right
+// Handle ArrowUp shooting
+// Move bullets
+
+// === New Super Beam Block ===
+if (superBeamActive || infiniteSuperBeam) {
+    if (!infiniteSuperBeam) {
+        superBeamTimer -= deltaTime;
+        if (superBeamTimer <= 0) superBeamActive = false;
+    }
+
+    enemies.forEach((enemy, i) => {
+        const beamWidth = 10;
+        if (enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
+            enemy.x <= player.x + player.width / 2 + beamWidth / 2) {
+            enemies.splice(i, 1);
+            enemyDestroyed(true);
+        }
+    });
+}
+
+// Then loop through enemies for collisions with bullets and player
+
         // Enemies
         for (let i = enemies.length - 1; i >= 0; i--) {
           enemies[i].y += enemies[i].speed;
@@ -334,45 +335,25 @@ if (keys["ArrowUp"]) {
             }
           }
 
-         if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
-  enemies.splice(i, 1);
-  if (!invincibleMode) {
-    lives--;
-    if (lives <= 0) {
-      gameOver = true;
-      // Reset all cheats on death
-      zeroBulletCooldown = false;
-      infiniteSuperBeam = false;
-      invincibleMode = false;
+if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
+    enemies.splice(i, 1);
+    if (!invincibleMode) {
+        lives--;
+        if (lives <= 0) {
+            gameOver = true;
+            // reset cheats on death
+            zeroBulletCooldown = false;
+            infiniteSuperBeam = false;
+            invincibleMode = false;
+            maxLives = 3;
+        }
     }
-  }
 }
-
 
           if (i < enemies.length && enemies[i].y > canvas.height) {
             enemies.splice(i, 1);
           }
         }
-
-        // Super beam
-        if (superBeamActive) {
-          superBeamTimer -= deltaTime;
-          enemies.forEach((enemy, i) => {
-            const beamWidth = 10;
-            if (
-              enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
-              enemy.x <= player.x + player.width / 2 + beamWidth / 2
-            ) {
-              enemies.splice(i, 1);
-              enemyDestroyed(true);
-            }
-          });
-
-          if (superBeamTimer <= 0) {
-            superBeamActive = false;
-          }
-        }
-      }
 
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -407,7 +388,7 @@ if (keys["ArrowUp"]) {
         ctx.fillStyle = "#ffffff";
         ctx.font = "20px monospace";
         ctx.fillText("Kills: " + totalKills, 10, 30);
-        ctx.fillText("Super Beam: " + superKillCounter + "/30", 10, 60);
+        ctx.fillText("Super Beam: " + (infiniteSuperBeam ? "♾️" : superKillCounter + "/30"), 10, 60);
 
         if (gameOver) {
           ctx.fillStyle = "red";
