@@ -154,6 +154,11 @@
       let lastFireTime = 0;
       const fireCooldown = 200;
 
+      // Cheat states
+  let zeroBulletCooldown = false;   // zbfc01
+  let infiniteSuperBeam = false;    // isb02
+  let invincibleMode = false;        // ib04
+
       document.addEventListener("keydown", (e) => {
   // ✨ Open code box with T, but don’t type the T inside it
   if ((e.key === "t" || e.key === "T") && codeBox.style.display !== "block") {
@@ -188,11 +193,21 @@
   if (e.key === "Enter") {
     const code = codeBox.value.trim().toLowerCase();
 
-    if (code === "tori" || code === "default" || code === "gio") {
-      currentShip = code; // either "tori", "default", or "gio"
-      localStorage.setItem("playerShip", currentShip);
-      setShipSprites(currentShip);
-    }
+    const cheat = code.toLowerCase();
+
+if (cheat === "tori" || cheat === "default" || cheat === "gio") {
+  currentShip = cheat;
+  localStorage.setItem("playerShip", currentShip);
+  setShipSprites(currentShip);
+}
+
+// Cheat codes
+if (cheat === "zbfc01") zeroBulletCooldown = true;
+if (cheat === "isb02") infiniteSuperBeam = true;
+if (cheat === "tl03") lives += 10;
+if (cheat === "ib04") invincibleMode = true;
+if (cheat === "hpb05") lives = 3;  // full heal (adjust max as needed)
+
 
     codeBox.value = "";
     codeBox.style.display = "none";
@@ -241,6 +256,38 @@
       function update(deltaTime) {
         if (gameOver) return;
 
+if (keys["ArrowUp"]) {
+  if (performance.now() - lastFireTime > (zeroBulletCooldown ? 0 : fireCooldown)) {
+    bullets.push({
+      x: player.x + player.width / 2 - 2,
+      y: player.y,
+      width: 4,
+      height: 10,
+      speed: 7
+    });
+    lastFireTime = performance.now();
+  }
+}
+
+        if (superBeamActive || infiniteSuperBeam) {
+  if (!superBeamActive) superBeamTimer = 5000; // for normal beam timing
+  superBeamActive = true;
+  enemies.forEach((enemy, i) => {
+    const beamWidth = 10;
+    if (enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
+        enemy.x <= player.x + player.width / 2 + beamWidth / 2) {
+      enemies.splice(i, 1);
+      enemyDestroyed(true);
+    }
+  });
+
+  if (!infiniteSuperBeam) {
+    superBeamTimer -= deltaTime;
+    if (superBeamTimer <= 0) superBeamActive = false;
+  }
+}
+
+        
         // Move player
         if (keys["ArrowLeft"]) {
           player.x -= player.speed;
@@ -286,11 +333,20 @@
             }
           }
 
-          if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
-            enemies.splice(i, 1);
-            lives--;
-            if (lives <= 0) gameOver = true;
-          }
+         if (i < enemies.length && checkPlayerEnemyCollision(player, enemies[i])) {
+  enemies.splice(i, 1);
+  if (!invincibleMode) {
+    lives--;
+    if (lives <= 0) {
+      gameOver = true;
+      // Reset all cheats on death
+      zeroBulletCooldown = false;
+      infiniteSuperBeam = false;
+      invincibleMode = false;
+    }
+  }
+}
+
 
           if (i < enemies.length && enemies[i].y > canvas.height) {
             enemies.splice(i, 1);
