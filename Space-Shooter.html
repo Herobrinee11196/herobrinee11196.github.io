@@ -299,6 +299,22 @@ if (keys["ArrowUp"]) {
           if (bullets[i].y < 0) bullets.splice(i, 1);
         }
 
+// === SUPER BEAM ACTIVATION (ArrowDown) ===
+if (keys["ArrowDown"]) {
+    if (canUseSuper || infiniteSuperBeam) {
+        if (!superBeamActive) {
+            superBeamActive = true;
+            superBeamTimer = 2500; // 2.5 seconds
+            canUseSuper = false;
+            superKillCounter = 0;
+        }
+    }
+} else {
+    if (!infiniteSuperBeam) {
+        superBeamActive = false;
+    }
+}
+        
     // Move player left/right
 // Handle ArrowUp shooting
 // Move bullets
