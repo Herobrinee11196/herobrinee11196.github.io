@@ -319,21 +319,25 @@ if (keys["ArrowDown"]) {
 // Handle ArrowUp shooting
 // Move bullets
 
-// === New Super Beam Block ===
-if (superBeamActive || infiniteSuperBeam) {
-    if (!infiniteSuperBeam) {
-        superBeamTimer -= deltaTime;
-        if (superBeamTimer <= 0) superBeamActive = false;
+// Super Beam logic
+if ((keys["ArrowDown"] && !infiniteSuperBeam) || (infiniteSuperBeam && keys["ArrowDown"])) {
+    if (!superBeamActive) {
+        superBeamActive = true;
+        if (!infiniteSuperBeam) superBeamTimer = 5000; // 5 sec for normal mode
     }
+}
 
-    enemies.forEach((enemy, i) => {
-        const beamWidth = 10;
-        if (enemy.x + enemy.width >= player.x + player.width / 2 - beamWidth / 2 &&
-            enemy.x <= player.x + player.width / 2 + beamWidth / 2) {
-            enemies.splice(i, 1);
-            enemyDestroyed(true);
-        }
-    });
+if (!infiniteSuperBeam && superBeamActive) {
+    superBeamTimer -= deltaTime;
+    if (superBeamTimer <= 0) {
+        superBeamActive = false;
+    }
+}
+
+if (infiniteSuperBeam && !keys["ArrowDown"]) {
+    superBeamActive = false;
+}
+
 }
 
 // Then loop through enemies for collisions with bullets and player
