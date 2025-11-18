@@ -229,6 +229,18 @@
 
           if(i<enemies.length && enemies[i].y>canvas.height) enemies.splice(i,1);
         }
+
+        if (superBeamActive) {
+  enemies.forEach((e, i) => {
+    // Check if enemy is within the vertical beam area
+    const beamX = player.x + player.width / 2 - 5;
+    const beamWidth = 10;
+    if (e.x + e.width > beamX && e.x < beamX + beamWidth) {
+      enemies.splice(i, 1);       // destroy enemy
+      enemyDestroyed(true);       // count as super kill
+    }
+  });
+}
       }
 
       function draw(){
