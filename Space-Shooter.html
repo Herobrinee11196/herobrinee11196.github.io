@@ -201,7 +201,10 @@
           superBeamActive=true;
           superBeamTimer=infiniteSuperBeam?5000:2500;
           canUseSuper=false;
-          superKillCounter=0;
+
+          // Subtract 30 kills instead of resetting
+          superKillCounter -= 30;
+          if (superKillCounter < 0) superKillCounter = 0;
         }
         if(!infiniteSuperBeam && superBeamActive){
           superBeamTimer-=deltaTime;
